@@ -1,0 +1,55 @@
+// main.cpp
+// This code groups edges into lines, line clusters, quadrilaterals, and
+// depth-ordered planes based on cues in the single image
+// Author: Lars Jangaard, Olajumoke Fajinmi, William Hoffrance
+// Date: 11/3/2013
+
+#include <opencv/cv.h>
+#include <opencv/highgui.h>
+using namespace cv;
+
+// main - This method performs greyscale conversion, blur, and canny operations to an image.
+// preconditions - 001.jpg exists in the code directory and is a valid JPEG.
+// postconditions - intermediate results are displayed on the screen and
+//					the final result is saved to the file system as output.jpg.
+int main(int argc, char *argv[]) {
+
+	// Read in and display test image
+	Mat image = imread("001.jpg");     
+	namedWindow("Input Image");
+	imshow("Input Image", image);
+	cvWaitKey(0);
+	
+	// Perform a greyscale conversion and display result
+	Mat greyed;
+	cvtColor(image, greyed, CV_BGR2GRAY);
+	imshow("Output Image", greyed);
+	cvWaitKey(0);
+
+	// Perform blur and display result
+	Mat blurred;
+	GaussianBlur(greyed, blurred, Size(7, 7), 2.0, 2.0);
+	imshow("Output Image", blurred);
+	cvWaitKey(0);
+
+	// Perform edge-detection and display result
+	Mat edged;
+	Canny(blurred, edged, 10, 20);
+	imshow("Output Image", edged);
+	cvWaitKey(0);
+
+	// Perform Hough transform to find lines
+	Mat houghed(image);
+	vector<Vec4i> lines;
+	HoughLinesP(edged, lines, 1, CV_PI/180, 50, 50, 10 );
+	for( size_t i = 0; i < lines.size(); i++ ) {
+		Vec4i l = lines[i];
+		line(houghed, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255));
+	}
+	imshow("Output Image", houghed);
+	cvWaitKey(0);
+
+	imwrite("output.jpg", houghed);
+
+	return 0;
+}
