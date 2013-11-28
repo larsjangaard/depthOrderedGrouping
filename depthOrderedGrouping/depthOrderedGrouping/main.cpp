@@ -50,6 +50,9 @@ struct TheImage {
 	}
 };
 
+void cannyThresholdOneTrackbar(int, void*);
+void cannyThresholdTwoTrackbar(int, void*);
+void cannyAperatureTrackbar(int, void*);
 
 // findVanishPts
 // finds your two vanishing points (left and right)
@@ -172,7 +175,6 @@ void findGoodLines(TheImage *myImg,
 			}
 		}
 	}
-	
 }
 
 
@@ -183,6 +185,11 @@ void findGoodLines(TheImage *myImg,
 void transform1(void *src) {
   	TheImage *myImg = (TheImage*) src;
 	Canny(myImg->blurred, myImg->edged, myImg->thresh1, myImg->thresh2, myImg->aperture);
+
+    createTrackbar("Thresh1", "Output1", &myImg->thresh1, 100, cannyThresholdOneTrackbar, &*myImg);
+	createTrackbar("Thresh2", "Output1", &myImg->thresh2, 300, cannyThresholdTwoTrackbar, &*myImg);
+	createTrackbar("Aperture", "Output1", &myImg->aperture, 7, cannyAperatureTrackbar, &*myImg);
+
 	imshow( "Output1", myImg->edged );
 }
 
@@ -247,14 +254,14 @@ void transform3(void *src) {
 
 // on_trackbar1 - threshold 1
 // the lower the threshold the more lines you get in non-edgy places
-void on_trackbar1(int thresh1_slider, void *src) {
+void cannyThresholdOneTrackbar(int thresh1_slider, void *src) {
 	( (TheImage*) src )->thresh1 = thresh1_slider;
 	transform1(src);
 }
 
 // on_trackbar2 - threshold 2
 // seems to have a relationship with threshold 1 but mostly does the same thing
-void on_trackbar2(int thresh2_slider, void *src) {
+void cannyThresholdTwoTrackbar(int thresh2_slider, void *src) {
 	( (TheImage*) src )->thresh2 = thresh2_slider;
 	transform1(src);
 }
@@ -262,7 +269,7 @@ void on_trackbar2(int thresh2_slider, void *src) {
 // on_trackbar3 - aperture
 // compounds the edge detection.
 // can only be 1, 3, 5, 7, but crashes on 1 so i don't allow it 
-void on_trackbar3(int aperture_slider, void *src) {
+void cannyAperatureTrackbar(int aperture_slider, void *src) {
 	int aperSize = aperture_slider;
 	if (aperSize < 5 ) aperSize = 3;
 	else if (aperSize == 6) aperSize = 7;
@@ -332,11 +339,6 @@ int main(int argc, char *argv[]) {
 	TheImage *myImage = new TheImage(image, blurred);
 	
 	transform1((void*)myImage);	// Perform default canny
-
-	// Create trackbars for Canny
-	createTrackbar("Thresh1", "Output1", &myImage->thresh1, 100, on_trackbar1, &*myImage);
-	createTrackbar("Thresh2", "Output1", &myImage->thresh2, 300, on_trackbar2, &*myImage);
-	createTrackbar("Aperture", "Output1", &myImage->aperture, 7, on_trackbar3, &*myImage);
 	
 	cvWaitKey(0);
 	imwrite("edged.jpg", myImage->edged);	// save canny result
