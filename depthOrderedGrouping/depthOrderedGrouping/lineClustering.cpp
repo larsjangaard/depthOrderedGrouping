@@ -1,7 +1,7 @@
-// Program0.cpp
+// lineClustering.cpp
 // The program takes an image which it flips, converts to grayscale, blur, create a trackbar
-//and draws the edges of the blurred image according to the slide on the track bar
-//it also resizes another image and blends it to the input image
+// and draws the edges of the blurred image according to the slide on the track bar
+// it also resizes another image and blends it to the input image
 // Author: Olajumoke Fajinmi
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
