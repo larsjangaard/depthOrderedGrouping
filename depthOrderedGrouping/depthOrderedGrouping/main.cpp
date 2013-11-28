@@ -18,19 +18,20 @@ struct TheImage {
 	float vertical; // acceptable slope to consider vertical
 
 	//*******************************************************//
-	// each Vec4i holds 2 pair of line segment coords		 //
+	// each Vec4i holds 2 pair of line segment coords
 	//*******************************************************//
 	
 	// HoughlinesP result
 	vector<Vec4i> allLines; 
 	
 	// vanishing point filter results
-	vector<Vec4i> goodLines; 
+	// holds vectors of leftLines, rightLines, and vertLines
+	//vector<vector<Vec4i>> goodLines; 
 	// vector<Vec4i> vertLines, leftLines, rightLines;
 	
 	// collections of indeces for each pair of 'allLines', along with the coords
 	// for their intersection on either the left or right side of the image.
-	vector<vector<Vec4i>> allVanPts;
+	//vector<vector<Vec4i>> allVanPts;
 
 
 	// constructor w/ default values
@@ -52,13 +53,18 @@ struct TheImage {
 
 // findVanishPts
 // finds your two vanishing points (left and right)
-// input the image data object (TheImage) and Point vector to be populated
-// optional vectors for all vanishing points and vertical lines
-
-// Program crashes here
-void findVanishPts(TheImage *myImg, vector<Vec4i> *myLines, vector<Point> *myVanPts,
+// input the image data object (TheImage) and
+// vector of line vectors to be populated
+// (outer vector has 3 elements: left, right, and vertical lines)
+// optional vectors for all vanishing points and mean vanishing points
+// if you want them returned.
+void findGoodLines(TheImage *myImg,
+				   vector<Vec4i> *myLines,
+				   vector<Vec4i> *leftLines,
+				   vector<Vec4i> *rightLines,
+				   vector<Vec4i> *vertLines,
 				   vector<vector<Vec4i>> *allVanPts = new vector<vector<Vec4i>>,
-				   vector<Vec4i> *vertLines = new vector<Vec4i>) {
+				   vector<Point> *meanVanPts = new vector<Point>) {
 
 	vector<Vec4i> leftVanPts, rightVanPts;
 
@@ -109,8 +115,8 @@ void findVanishPts(TheImage *myImg, vector<Vec4i> *myLines, vector<Point> *myVan
 
 						// collect the good vanishing points
 						// CHANGE FOR FINAL
-						if (intxnX < 267 && intxnX > 0) leftVanPts.push_back(curVanPt);
-						else if (intxnX > 647 && intxnX < myImg->original.cols) rightVanPts.push_back(curVanPt);
+						if (intxnX < 265 && intxnX > 0) leftVanPts.push_back(curVanPt);
+						else if (intxnX > 650 && intxnX < myImg->original.cols) rightVanPts.push_back(curVanPt);
 					}
 				}
 			}
@@ -134,8 +140,7 @@ void findVanishPts(TheImage *myImg, vector<Vec4i> *myLines, vector<Point> *myVan
 	kmeans(leftMat, 1, leftLabels, TermCriteria(CV_TERMCRIT_ITER, ITERNS, 1.0), ATMPTS, KMEANS_PP_CENTERS, leftCenters);
 	int leftX = (int)leftCenters.at<float>(0,0);
 	int leftY = (int)leftCenters.at<float>(0,1);
-	myVanPts->push_back(Point(leftX, leftY));
-	//circle(myImg->vanished, Point(leftX, leftY), 6, Scalar(0,100,0), 1);
+	meanVanPts->push_back(Point(leftX, leftY));
 
 	for (int i=0; i < rightVanPts.size(); i++) {
 		rightMat.at<float>(i,0) = (float)rightVanPts[i][2];
@@ -144,8 +149,29 @@ void findVanishPts(TheImage *myImg, vector<Vec4i> *myLines, vector<Point> *myVan
 	kmeans(rightMat, 1, rightLabels, TermCriteria(CV_TERMCRIT_ITER, ITERNS, 1.0), ATMPTS, KMEANS_PP_CENTERS, rightCenters);
 	int rightX = (int)rightCenters.at<float>(0,0);
 	int rightY = (int)rightCenters.at<float>(0,1);
-	myVanPts->push_back(Point(rightX, rightY));
-	//circle(myImg->vanished, Point(rightX, rightY), 6, Scalar(0,100,0), 1);
+	meanVanPts->push_back(Point(rightX, rightY));
+
+	// go thru all the vanishing points
+	for (int i=0; i < allVanPts->size(); i++) {
+		vector<Vec4i> curVanPts = allVanPts->at(i);
+		vector<Vec4i> *curGoodLines = (i==0) ? leftLines : rightLines;
+		float curMeanX = meanVanPts->at(i).x;
+		float curMeanY = meanVanPts->at(i).y;
+
+		for (int j=0; j < curVanPts.size(); j++) {
+			Vec4i curVanPt = curVanPts[j];
+			circle(myImg->vanished, Point(curVanPt[2], curVanPt[3]),3, Scalar(0,255,0));
+			int curVanPtX = curVanPt[2];
+			int curVanPtY = curVanPt[3];
+			if (abs(curMeanX - curVanPtX) < myImg->proximity &&
+				abs(curMeanY - curVanPtY) < myImg->proximity) {
+					int allLinesInd0 = curVanPt[0];
+					int allLinesInd1 = curVanPt[1];
+					curGoodLines->push_back(myImg->allLines[allLinesInd0]);
+					curGoodLines->push_back(myImg->allLines[allLinesInd1]);
+			}
+		}
+	}
 	
 }
 
@@ -197,37 +223,25 @@ void transform2(void *src) {
 void transform3(void *src) {
 	TheImage *myImg = (TheImage*) src;
 	myImg->vanished = myImg->original.clone();
-	vector<Point> *myVanPts = new vector<Point>;
+	vector<Vec4i> leftLines, rightLines, vertLines; 
+	vector<vector<Vec4i>> allVanPts, goodLines;
+	vector<Point> meanVanPts;
 
-	findVanishPts(myImg, &myImg->allLines, myVanPts, &myImg->allVanPts, &myImg->goodLines);
-	// go thru all the vanishing points
-	for (int i=0; i<myImg->allVanPts.size(); i++) {
-		vector<Vec4i> curVanPts = myImg->allVanPts[i];
-		float curMeanX = myVanPts->at(i).x;
-		float curMeanY = myVanPts->at(i).y;
-
-		for (int j=0; j < curVanPts.size(); j++) {
-			Vec4i curVanPt = curVanPts[j];
-			circle(myImg->vanished, Point(curVanPt[2], curVanPt[3]),3, Scalar(0,255,0));
-			int curVanPtX = curVanPt[2];
-			int curVanPtY = curVanPt[3];
-			if (abs(curMeanX - curVanPtX) < myImg->proximity &&
-				abs(curMeanY - curVanPtY) < myImg->proximity) {
-					int allLinesInd0 = curVanPt[0];
-					int allLinesInd1 = curVanPt[1];
-					myImg->goodLines.push_back(myImg->allLines[allLinesInd0]);
-					myImg->goodLines.push_back(myImg->allLines[allLinesInd1]);
-			}
-		}
-	}
+	findGoodLines(myImg, &myImg->allLines, &leftLines, &rightLines, &vertLines, &allVanPts, &meanVanPts);
+	goodLines.push_back(leftLines);
+	goodLines.push_back(rightLines);
+	goodLines.push_back(vertLines);
 
 	// draw all the 'goodLines'
-	for( int i=0; i < myImg->goodLines.size(); i++ ) {
-		Vec4i l = myImg->goodLines[i];
-		line(myImg->vanished, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255));
+	for( int i=0; i < goodLines.size(); i++ ) {
+		vector<Vec4i> curLines = goodLines[i];
+		for( int j=0; j < curLines.size(); j++) {
+			Vec4i l = curLines[j];
+			line(myImg->vanished, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255));
+		}
 	}
-	circle(myImg->vanished, myVanPts->at(0), 6, Scalar(0,100,0), 1);
-	circle(myImg->vanished, myVanPts->at(1), 6, Scalar(0,100,0), 1);
+	circle(myImg->vanished, meanVanPts[0], 6, Scalar(0,100,0), 1);
+	circle(myImg->vanished, meanVanPts[1], 6, Scalar(0,100,0), 1);
 	imshow("Output3", myImg->vanished);
 }
 
@@ -293,8 +307,8 @@ void on_trackbar7(int vanSize_slider, void *src) {
 int main(int argc, char *argv[]) {
 
 	// Read in and display test image
-	Mat image = imread("159.jpg");
-	//Mat image = imread("borders.jpg");
+	//Mat image = imread("159.jpg");
+	Mat image = imread("borders.jpg");
 	namedWindow("Input");
 	imshow("Input", image);
 	cvWaitKey(0);
