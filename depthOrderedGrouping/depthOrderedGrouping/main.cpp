@@ -53,6 +53,9 @@ struct TheImage {
 void cannyThresholdOneTrackbar(int, void*);
 void cannyThresholdTwoTrackbar(int, void*);
 void cannyAperatureTrackbar(int, void*);
+void houghAccumulatorTrackbar(int, void*);
+void houghMinLenTrackbar(int, void*);
+void houghMaxGapTrackbar(int, void*);
 
 // findVanishPts
 // finds your two vanishing points (left and right)
@@ -220,6 +223,11 @@ void transform2(void *src) {
 		Vec4i l = myImg->allLines[i];
 		line(myImg->houghed, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255));
 	}
+
+	createTrackbar("Thresh", "Output2", &myImg->thresh3, 150, houghAccumulatorTrackbar, &*myImg);
+	createTrackbar("Min Length", "Output2", &myImg->minLen, 100, houghMinLenTrackbar, &*myImg);
+	createTrackbar("Max Gap", "Output2", &myImg->maxGap, 100, houghMaxGapTrackbar, &*myImg);
+
 	imshow("Output2", myImg->houghed);
 }
 
@@ -278,23 +286,23 @@ void cannyAperatureTrackbar(int aperture_slider, void *src) {
 }
 
 // on_trackbar4 - hough threshold
-void on_trackbar4(int thresh3_slider, void *src) {
+void houghAccumulatorTrackbar(int thresh3_slider, void *src) {
 	if (thresh3_slider==0) thresh3_slider=1;
 	( (TheImage*) src )->thresh3 = thresh3_slider;
 	transform2(src);
 }
 
 // on_trackbar5 - min line length
-void on_trackbar5(int minLen_slider, void *src) {
+void houghMinLenTrackbar(int minLen_slider, void *src) {
 	if (minLen_slider==0) minLen_slider=1;
-	( (TheImage*) src )->thresh3 = minLen_slider;
+	( (TheImage*) src )->minLen = minLen_slider;
 	transform2(src);
 }
 
 // on_trackbar6 - hough threshold
-void on_trackbar6(int maxGap_slider, void *src) {
+void houghMaxGapTrackbar(int maxGap_slider, void *src) {
 	if (maxGap_slider==0) maxGap_slider=1;
-	( (TheImage*) src )->thresh3 = maxGap_slider;
+	( (TheImage*) src )->maxGap = maxGap_slider;
 	transform2(src);
 }
 
@@ -347,9 +355,9 @@ int main(int argc, char *argv[]) {
 	transform2((void*)myImage);	// Perform default houghlinesp
 
 	// Create trackbars for HoughlinesP
-	createTrackbar("Thresh", "Output2", &myImage->thresh3, 150, on_trackbar4, &*myImage);
-	createTrackbar("Min Length", "Output2", &myImage->minLen, 100, on_trackbar5, &*myImage);
-	createTrackbar("Max Gap", "Output2", &myImage->maxGap, 100, on_trackbar6, &*myImage);
+	//createTrackbar("Thresh", "Output2", &myImage->thresh3, 150, on_trackbar4, &*myImage);
+	//createTrackbar("Min Length", "Output2", &myImage->minLen, 100, on_trackbar5, &*myImage);
+	//createTrackbar("Max Gap", "Output2", &myImage->maxGap, 100, on_trackbar6, &*myImage);
 
 	cvWaitKey(0);
 	imwrite("houghed.jpg", myImage->houghed); // save houghed result
