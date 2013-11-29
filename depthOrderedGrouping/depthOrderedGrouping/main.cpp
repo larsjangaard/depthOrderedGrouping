@@ -16,23 +16,7 @@ struct TheImage {
         int thresh3, minLen, maxGap; // for HoughlinesP
         int proximity; // for vanishing point regions
         float vertical; // acceptable slope to consider vertical
-
-        //*******************************************************//
-        // each Vec4i holds 2 pair of line segment coords
-        //*******************************************************//
-        
-        // HoughlinesP result
-        vector<Vec4i> allLines;
-        
-        // vanishing point filter results
-        // holds vectors of leftLines, rightLines, and vertLines
-        //vector<vector<Vec4i>> goodLines;
-        // vector<Vec4i> vertLines, leftLines, rightLines;
-        
-        // collections of indeces for each pair of 'allLines', along with the coords
-        // for their intersection on either the left or right side of the image.
-        //vector<vector<Vec4i>> allVanPts;
-
+		vector<Vec4i> allLines; // HoughlinesP result
 
         // constructor w/ default values
         TheImage(Mat orig, Mat blur, int t1=18, int t2=65, int ap=3,
@@ -57,20 +41,19 @@ void houghAccumulatorTrackbar(int, void*);
 void houghMinLenTrackbar(int, void*);
 void houghMaxGapTrackbar(int, void*);
 
-// findVanishPts
+// findGoodLines
 // finds your two vanishing points (left and right)
 // input the image data object (TheImage) and
-// vector of line vectors to be populated
-// (outer vector has 3 elements: left, right, and vertical lines)
-// optional vectors for all vanishing points and mean vanishing points
-// if you want them returned.
+// 3 line vectors can be populated
+// (left, right, and vertical)
+// optional vectors for returning vanishing points
 void findGoodLines(TheImage *myImg,
-                                 vector<Vec4i> *myLines,
-                                 vector<Vec4i> *leftLines,
-                                 vector<Vec4i> *rightLines,
-                                 vector<Vec4i> *vertLines,
-                                 vector<vector<Vec4i>> *allVanPts = new vector<vector<Vec4i>>,
-                                 vector<Point> *meanVanPts = new vector<Point>) {
+                                   vector<Vec4i> *myLines,
+                                   vector<Vec4i> *leftLines,
+                                   vector<Vec4i> *rightLines,
+                                   vector<Vec4i> *vertLines,
+                                   vector<vector<Vec4i>> *allVanPts = new vector<vector<Vec4i>>,
+                                   vector<Point> *meanVanPts = new vector<Point>) {
 
         vector<Vec4i> leftVanPts, rightVanPts;
 
@@ -83,7 +66,7 @@ void findGoodLines(TheImage *myImg,
                 dx_i = x2_i - x1_i;        dy_i = y2_i - y1_i;
 
                 if (dx_i == 0) dx_i = .0001; // vertical
-                mi = -(dy_i / dx_i); // slope
+                mi = (dy_i / dx_i); // slope
                 if (abs(mi) > myImg->vertical) vertLines->push_back(line_i); // this will go to 'goodLines' by default
                 else {
                         ci = y1_i - (mi*x1_i); // intercept
@@ -96,7 +79,7 @@ void findGoodLines(TheImage *myImg,
                                 x2_j = line_j[2];        y2_j = line_j[3];
                                 dx_j = x2_j - x1_j;        dy_j = y2_j - y1_j;
                                 if (dx_j == 0) dx_j = -.0001; // vertical
-                                mj = -(dy_j / dx_j); // slope
+                                mj = (dy_j / dx_j); // slope
                                 
                                 if (abs(mj) > myImg->vertical && j == myLines->size()-1)
                                         vertLines->push_back(line_j);
@@ -113,7 +96,7 @@ void findGoodLines(TheImage *myImg,
                                         intxnY = (mi*intxnX) + ci;
                                         Vec4i curVanPt;
 
-                                        if ( (intxnY > 0) && (intxnY < myImg->original.rows) ) {
+                                        if ( (intxnY >= 0) && (intxnY < myImg->original.rows) ) {
                                                 curVanPt[0] = i;
                                                 curVanPt[1] = j;
                                                 curVanPt[2] = intxnX;
@@ -179,7 +162,6 @@ void findGoodLines(TheImage *myImg,
                 }
         }
 }
-
 
 
 //transform1 - takes the blurred image and applies edge detection based on slidebar values
@@ -353,11 +335,6 @@ int main(int argc, char *argv[]) {
 
         namedWindow("Output2");
         transform2((void*)myImage);        // Perform default houghlinesp
-
-        // Create trackbars for HoughlinesP
-        //createTrackbar("Thresh", "Output2", &myImage->thresh3, 150, on_trackbar4, &*myImage);
-        //createTrackbar("Min Length", "Output2", &myImage->minLen, 100, on_trackbar5, &*myImage);
-        //createTrackbar("Max Gap", "Output2", &myImage->maxGap, 100, on_trackbar6, &*myImage);
 
         cvWaitKey(0);
         imwrite("houghed.jpg", myImage->houghed); // save houghed result
