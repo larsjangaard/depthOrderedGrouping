@@ -6,6 +6,8 @@
 
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
+//#include <iostream>
+//#include <fstream>
 using namespace cv;
 
 // struct holds the images and data we want to maintain
@@ -16,23 +18,8 @@ struct TheImage {
 	int thresh3, minLen, maxGap; // for HoughlinesP
 	int proximity; // for vanishing point regions
 	float vertical; // acceptable slope to consider vertical
-
-	//*******************************************************//
+	vector<Vec4i> allLines; // HoughlinesP result
 	// each Vec4i holds 2 pair of line segment coords
-	//*******************************************************//
-	
-	// HoughlinesP result
-	vector<Vec4i> allLines; 
-	
-	// vanishing point filter results
-	// holds vectors of leftLines, rightLines, and vertLines
-	//vector<vector<Vec4i>> goodLines; 
-	// vector<Vec4i> vertLines, leftLines, rightLines;
-	
-	// collections of indeces for each pair of 'allLines', along with the coords
-	// for their intersection on either the left or right side of the image.
-	//vector<vector<Vec4i>> allVanPts;
-
 
 	// constructor w/ default values
 	TheImage(Mat orig, Mat blur, int t1=18, int t2=65, int ap=3,
@@ -50,20 +37,13 @@ struct TheImage {
 	}
 };
 
-void cannyThresholdOneTrackbar(int, void*);
-void cannyThresholdTwoTrackbar(int, void*);
-void cannyAperatureTrackbar(int, void*);
-void houghAccumulatorTrackbar(int, void*);
-void houghMinLenTrackbar(int, void*);
-void houghMaxGapTrackbar(int, void*);
 
-// findVanishPts
+// findGoodLines
 // finds your two vanishing points (left and right)
 // input the image data object (TheImage) and
-// vector of line vectors to be populated
-// (outer vector has 3 elements: left, right, and vertical lines)
-// optional vectors for all vanishing points and mean vanishing points
-// if you want them returned.
+// 3 line vectors can be populated
+// (left, right, and vertical)
+// optional vectors for returning vanishing points
 void findGoodLines(TheImage *myImg,
 				   vector<Vec4i> *myLines,
 				   vector<Vec4i> *leftLines,
@@ -83,7 +63,7 @@ void findGoodLines(TheImage *myImg,
 		dx_i = x2_i - x1_i;	dy_i = y2_i - y1_i;
 
 		if (dx_i == 0) dx_i = .0001; // vertical
-		mi = -(dy_i / dx_i); // slope
+		mi = (dy_i / dx_i); // slope
 		if (abs(mi) > myImg->vertical) vertLines->push_back(line_i); // this will go to 'goodLines' by default
 		else {
 			ci = y1_i - (mi*x1_i); // intercept
@@ -96,7 +76,7 @@ void findGoodLines(TheImage *myImg,
 				x2_j = line_j[2];	y2_j = line_j[3];
 				dx_j = x2_j - x1_j;	dy_j = y2_j - y1_j;
 				if (dx_j == 0) dx_j = -.0001; // vertical
-				mj = -(dy_j / dx_j); // slope
+				mj = (dy_j / dx_j); // slope
 				
 				if (abs(mj) > myImg->vertical && j == myLines->size()-1)
 					vertLines->push_back(line_j);
@@ -113,7 +93,7 @@ void findGoodLines(TheImage *myImg,
 					intxnY = (mi*intxnX) + ci;
 					Vec4i curVanPt;
 
-					if ( (intxnY > 0) && (intxnY < myImg->original.rows) ) {
+					if ( (intxnY >= 0) && (intxnY < myImg->original.rows) ) {
 						curVanPt[0] = i;
 						curVanPt[1] = j;
 						curVanPt[2] = intxnX;
@@ -188,11 +168,6 @@ void findGoodLines(TheImage *myImg,
 void transform1(void *src) {
   	TheImage *myImg = (TheImage*) src;
 	Canny(myImg->blurred, myImg->edged, myImg->thresh1, myImg->thresh2, myImg->aperture);
-
-    createTrackbar("Thresh1", "Output1", &myImg->thresh1, 100, cannyThresholdOneTrackbar, &*myImg);
-	createTrackbar("Thresh2", "Output1", &myImg->thresh2, 300, cannyThresholdTwoTrackbar, &*myImg);
-	createTrackbar("Aperture", "Output1", &myImg->aperture, 7, cannyAperatureTrackbar, &*myImg);
-
 	imshow( "Output1", myImg->edged );
 }
 
@@ -216,18 +191,12 @@ void transform2(void *src) {
 	//	pt2.x = cvRound(x0 - 1000*(-b));
 	//	pt2.y = cvRound(y0 - 1000*(a));
 	//	line( myImg->houghed, pt1, pt2, Scalar(0,0,255), 1, CV_AA);
- // }
-
+	//}
 
 	for( int i = 0; i < myImg->allLines.size(); i++ ) {
 		Vec4i l = myImg->allLines[i];
 		line(myImg->houghed, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255));
 	}
-
-	createTrackbar("Thresh", "Output2", &myImg->thresh3, 150, houghAccumulatorTrackbar, &*myImg);
-	createTrackbar("Min Length", "Output2", &myImg->minLen, 100, houghMinLenTrackbar, &*myImg);
-	createTrackbar("Max Gap", "Output2", &myImg->maxGap, 100, houghMaxGapTrackbar, &*myImg);
-
 	imshow("Output2", myImg->houghed);
 }
 
@@ -243,6 +212,7 @@ void transform3(void *src) {
 	vector<Point> meanVanPts;
 
 	findGoodLines(myImg, &myImg->allLines, &leftLines, &rightLines, &vertLines, &allVanPts, &meanVanPts);
+
 	goodLines.push_back(leftLines);
 	goodLines.push_back(rightLines);
 	goodLines.push_back(vertLines);
@@ -262,14 +232,14 @@ void transform3(void *src) {
 
 // on_trackbar1 - threshold 1
 // the lower the threshold the more lines you get in non-edgy places
-void cannyThresholdOneTrackbar(int thresh1_slider, void *src) {
+void on_trackbar1(int thresh1_slider, void *src) {
 	( (TheImage*) src )->thresh1 = thresh1_slider;
 	transform1(src);
 }
 
 // on_trackbar2 - threshold 2
 // seems to have a relationship with threshold 1 but mostly does the same thing
-void cannyThresholdTwoTrackbar(int thresh2_slider, void *src) {
+void on_trackbar2(int thresh2_slider, void *src) {
 	( (TheImage*) src )->thresh2 = thresh2_slider;
 	transform1(src);
 }
@@ -277,7 +247,7 @@ void cannyThresholdTwoTrackbar(int thresh2_slider, void *src) {
 // on_trackbar3 - aperture
 // compounds the edge detection.
 // can only be 1, 3, 5, 7, but crashes on 1 so i don't allow it 
-void cannyAperatureTrackbar(int aperture_slider, void *src) {
+void on_trackbar3(int aperture_slider, void *src) {
 	int aperSize = aperture_slider;
 	if (aperSize < 5 ) aperSize = 3;
 	else if (aperSize == 6) aperSize = 7;
@@ -286,23 +256,23 @@ void cannyAperatureTrackbar(int aperture_slider, void *src) {
 }
 
 // on_trackbar4 - hough threshold
-void houghAccumulatorTrackbar(int thresh3_slider, void *src) {
+void on_trackbar4(int thresh3_slider, void *src) {
 	if (thresh3_slider==0) thresh3_slider=1;
 	( (TheImage*) src )->thresh3 = thresh3_slider;
 	transform2(src);
 }
 
 // on_trackbar5 - min line length
-void houghMinLenTrackbar(int minLen_slider, void *src) {
+void on_trackbar5(int minLen_slider, void *src) {
 	if (minLen_slider==0) minLen_slider=1;
-	( (TheImage*) src )->minLen = minLen_slider;
+	( (TheImage*) src )->thresh3 = minLen_slider;
 	transform2(src);
 }
 
 // on_trackbar6 - hough threshold
-void houghMaxGapTrackbar(int maxGap_slider, void *src) {
+void on_trackbar6(int maxGap_slider, void *src) {
 	if (maxGap_slider==0) maxGap_slider=1;
-	( (TheImage*) src )->maxGap = maxGap_slider;
+	( (TheImage*) src )->thresh3 = maxGap_slider;
 	transform2(src);
 }
 
@@ -347,6 +317,11 @@ int main(int argc, char *argv[]) {
 	TheImage *myImage = new TheImage(image, blurred);
 	
 	transform1((void*)myImage);	// Perform default canny
+
+	// Create trackbars for Canny
+	createTrackbar("Thresh1", "Output1", &myImage->thresh1, 100, on_trackbar1, &*myImage);
+	createTrackbar("Thresh2", "Output1", &myImage->thresh2, 300, on_trackbar2, &*myImage);
+	createTrackbar("Aperture", "Output1", &myImage->aperture, 7, on_trackbar3, &*myImage);
 	
 	cvWaitKey(0);
 	imwrite("edged.jpg", myImage->edged);	// save canny result
@@ -355,9 +330,9 @@ int main(int argc, char *argv[]) {
 	transform2((void*)myImage);	// Perform default houghlinesp
 
 	// Create trackbars for HoughlinesP
-	//createTrackbar("Thresh", "Output2", &myImage->thresh3, 150, on_trackbar4, &*myImage);
-	//createTrackbar("Min Length", "Output2", &myImage->minLen, 100, on_trackbar5, &*myImage);
-	//createTrackbar("Max Gap", "Output2", &myImage->maxGap, 100, on_trackbar6, &*myImage);
+	createTrackbar("Thresh", "Output2", &myImage->thresh3, 150, on_trackbar4, &*myImage);
+	createTrackbar("Min Length", "Output2", &myImage->minLen, 100, on_trackbar5, &*myImage);
+	createTrackbar("Max Gap", "Output2", &myImage->maxGap, 100, on_trackbar6, &*myImage);
 
 	cvWaitKey(0);
 	imwrite("houghed.jpg", myImage->houghed); // save houghed result
