@@ -1,8 +1,3 @@
-// lineClustering.cpp
-// The program takes an image which it flips, converts to grayscale, blur, create a trackbar
-// and draws the edges of the blurred image according to the slide on the track bar
-// it also resizes another image and blends it to the input image
-// Author: Olajumoke Fajinmi
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 #include <math.h>
@@ -13,20 +8,19 @@ using namespace std;
 
 struct Edge{
 	int vertex;
-	float parallelism;
-	float curvilinearity;
-	float orthogonality;
+	double attraction;
+	double repulsion;
 };
-float getOverlappingRatio(Vec2i overlapDistance, int dist)
+double getOverlappingRatio(Vec2i overlapDistance, int dist)
 {
 
-	float overlapRatio = ((overlapDistance[1]-overlapDistance[0]) / dist);
+	double overlapRatio = ((overlapDistance[1]-overlapDistance[0]) / dist);
 
 	return overlapRatio;
 	
 }
 
-float angularDifference(Vec4i lineA, Vec4i lineB)
+double angularDifference(Vec4i lineA, Vec4i lineB)
 { 
 	int m1, m2;
 	int denom1 = (lineA[2] - lineA[0]);
@@ -44,13 +38,13 @@ float angularDifference(Vec4i lineA, Vec4i lineB)
 	else
 	    m2 = atan((lineB[3] - lineB[1]) / denom2);
 
-	float angleDiff = abs(m1 - m2);
+	double angleDiff = abs(m1 - m2);
 	return pow(cos(angleDiff), 2);
 }
 
-float calcCurvilinearity(float angleDiff, float distanceH, float distanceV)
+double calcCurvilinearity(double angleDiff, double distanceH, double distanceV)
 {
-  float x, c1 = 2 * pow(3.0,2.0), c2 = 2 * pow(0.1,2.0), c3= 2 * pow(0.7,2.0);
+  double x, c1 = 2 * pow(3.0,2.0), c2 = 2 * pow(0.1,2.0), c3= 2 * pow(0.7,2.0);
   distanceH = pow(distanceH,2.0);
   distanceV = pow(distanceV,2.0);
   x =(-(distanceH/c1) - (distanceV/c2) -((1-angleDiff)/c3));
@@ -58,18 +52,18 @@ float calcCurvilinearity(float angleDiff, float distanceH, float distanceV)
   return exp(x);
 }
 
-float calcParallelism(int distance, float angleDiff, float overlappingRatio)
+double calcParallelism(int distance, double angleDiff, double overlappingRatio)
 {
-  float x, p1=2 * pow(3.0,2.0), p2 = 2 * pow(0.1,2.0), p3 = 2 * pow(0.1,2.0);
+  double x, p1=2 * pow(3.0,2.0), p2 = 2 * pow(0.1,2.0), p3 = 2 * pow(0.1,2.0);
   distance = pow(distance,2);
   x = (-(distance / p1) - (pow((1-overlappingRatio),2) / p2) - ((1-angleDiff) / p3));
   
   return exp(x);
 }
 
-float calcOrthogonality(int distance,float angleDiff)
+double calcOrthogonality(int distance,double angleDiff)
 {
-  float x, o1 = 2 * pow(2.0,2.0), o2 = 2 * pow(0.3,2.0);
+  double x, o1 = 2 * pow(2.0,2.0), o2 = 2 * pow(0.3,2.0);
   distance = pow(distance,2);
   x = (-(distance/o1)-(angleDiff/o2));
 
@@ -92,28 +86,41 @@ Vec2i findMinPoint(Vec4i line)
 	  return minPoints;
 }
 
+//Mat createMat(int SizeL)
+//{
+//	vector< Mat <Vec2d>>
+//}
+
 Mat groupLines(vector<Vec4i>& lines)
 {
   
   int x = 0;
 
-  size_t sizeL = lines.size();
+  int sizeL = (int) lines.size();
 
   int LGsize = sizeL*(sizeL + 1) / 2;
 
   vector<vector <Edge> > graph (sizeL);
+
+  vector<Vec4i> cluster1, cluster2, cluster3;
   
   Vec4i lineA, lineB;
+  int col =1;
   int weights = 5;
 
-  Mat centers, labels;
-  //Mat lineVec = Mat(lines);
+  Mat center, label, eigenVec, eigenVal;
 
-  Mat lineGraph = Mat::zeros(LGsize, weights, CV_32F);
+  Mat lambda = Mat::zeros(sizeL, col, CV_64F);
+  Mat lineGraph = Mat::zeros(sizeL, sizeL, CV_64F);
+  Mat lineGraphW = Mat::zeros(sizeL, sizeL, CV_64F);
+  Mat degreeMatrix = Mat::zeros(sizeL, sizeL, CV_64F);
+  Mat degreeMatrixR = Mat::zeros(sizeL, sizeL, CV_64F);
+  Mat degreeMatrixA = Mat::zeros(sizeL, sizeL, CV_64F);
+  Mat scaledLineGraph = Mat::zeros(sizeL, sizeL, CV_64F);
 
-  float overlappingRatio;
-  float curvilinearity, parallelism, orthogonality;
-  
+  double overlappingRatio;
+  double curvilinearity, parallelism, orthogonality;
+ 
   bool overlap;
   int d, distanceA, distanceB, k=0;
 
@@ -124,15 +131,22 @@ Mat groupLines(vector<Vec4i>& lines)
   int pointX, pointY;
   int distanceH, distanceV, angleDiff;
 
-  for (size_t i = 0; i < lines.size()-1; i++)
+  for (size_t i = 0; i < lines.size(); i++)
   {
 	  //graphElement[0] = (float) i;
 	  lineA = lines[i];
 	  distanceA = lineA[2] - lineA[0];
 	  
 
-	  for(size_t j = i+1; j < lines.size(); j++)
+	  for(size_t j = i; j < lines.size(); j++)
 	  {
+		  if(i==j)
+		  {
+			  curvilinearity = 0;
+			  parallelism = 0;
+			  orthogonality = 0;
+
+		  }
 		  //graphElement[1] = (float) j;
 		  lineB = lines[j];
 		  distanceB = lineB[2] - lineB[0];
@@ -287,34 +301,65 @@ Mat groupLines(vector<Vec4i>& lines)
 		  parallelism = calcParallelism(distance, angleDiff, overlappingRatio);
 	      orthogonality = calcOrthogonality(distance, angleDiff);
 
-		  //graphElement[2] = curvilinearity;
-		  //graphElement[3] = parallelism;
-		  //graphElement[4] = orthogonality;
-
-		lineGraph.at<float>(k,0) = (float) i;
-		lineGraph.at<float>(k,1) = (float) j;
-		lineGraph.at<float>(k,2) = curvilinearity;
-		lineGraph.at<float>(k,3) = parallelism;
-		lineGraph.at<float>(k,4) = orthogonality;
-
-		//graphLines[x] = graphElement;
-		++x;
+		
 		struct Edge edge;
 		edge.vertex = j;
-		edge.parallelism = parallelism;
-		edge.curvilinearity = curvilinearity;
-		edge.orthogonality = orthogonality;
+		edge.attraction = curvilinearity + parallelism;
+		edge.repulsion = orthogonality;
 		graph[i].push_back(edge);
+		edge.vertex = i;
+		graph[j].push_back(edge);
+
+		degreeMatrixA.at<double>(i,i) += parallelism + curvilinearity;
+		degreeMatrixR.at<double>(i,i) += orthogonality;
+		lineGraph.at<double>(i,j) = parallelism + curvilinearity - orthogonality;
+		
 		cout<<"curvilinearity"<<curvilinearity <<" \n";
 		cout<<"parallelism"<<parallelism <<" \n";
 		cout<<"orthogonality"<<orthogonality<<"\n";
-	  }
-	  ++x;
-  }
-  int clusters =3;
-  kmeans(lineGraph, clusters, labels, cvTermCriteria(1, 10, 1.0), 1, KMEANS_PP_CENTERS, centers);
 
-  return labels;
+		cout<< "attraction"<<lineGraph.at<double>(i,j)<<"\n";
+		  
+	  }
+	  
+  }
+  for (int a =0; a<sizeL; a++)
+  {
+	 for (int b =0; b<sizeL; b++)
+	 {
+		 degreeMatrix.at<double>(a,b) = degreeMatrixA.at<double>(a,b) + degreeMatrixR.at<double>(a,b);
+		 lineGraphW.at<double>(a,b) = lineGraph.at<double>(a,b) + degreeMatrixR.at<double>(a,b);
+
+		 scaledLineGraph.at<double>(a,b) = (pow(degreeMatrix.at<double>(a,a), -0.5) * lineGraphW.at<double>(a,b) * pow(degreeMatrix.at<double>(b,b), -0.5));
+	 }
+  }
+
+  
+  //multiply(degreeMatrix, lineGraphW, scaledLineGraph);
+
+
+  eigen(scaledLineGraph, eigenVal, eigenVec);
+  //eigen(lineGraph, eigenVal, eigenVec);
+  cout<< "eigenval"<<eigenVal.size()<<"\n";
+  cout<< "eigenvec"<<eigenVec.size()<<"\n";
+  cout<< "line"<<lines.size()<<"\n";
+
+  for (int i = 0; i < sizeL; i++)
+  {
+	  lambda.at<double>(i) = eigenVec.at<double>(i,3);
+  }
+
+  //exception at memory location
+    /*int clusters =3;
+    kmeans(lambda, clusters, label, cvTermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, 10000, 0.0001), 1, KMEANS_PP_CENTERS, center);
+*/
+  int w=0, e=0, r=0;
+   for(int i=0;i<sizeL;i++) {
+
+		  
+	}
+
+  return label;
 }
 int main(int argc, char** argv)
 {
@@ -330,18 +375,6 @@ int main(int argc, char** argv)
 
 		Canny(blurred, dst, 20, 40,3);
 
- //////cvtColor( src, src, CV_BGR2GRAY );
- ///////// Apply Histogram Equalization
- ////// equalizeHist( src, edst );
-
-
- //////  Mat blurred;
- //////       GaussianBlur(edst, blurred, Size(5, 5), 2.0, 2.0);
- //////       imshow("Output Image", blurred);
-
-	//////	Canny(blurred, dst, 20, 40,3);
- //Canny(src, dst, 8000, 13000, 7);
-		 //Canny(src, dst, 40, 90);
  imwrite("output.jpg", dst);
 
  cvtColor(dst, cdst, CV_GRAY2BGR);
