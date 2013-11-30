@@ -168,14 +168,14 @@ void findGoodLines(TheImage *myImg,
 //preconditions - a valid TheImage struct exists with assigned values
 //postconditions - transformed copy of image is displayed
 void transform1(void *src) {
-          TheImage *myImg = (TheImage*) src;
-        Canny(myImg->blurred, myImg->edged, myImg->thresh1, myImg->thresh2, myImg->aperture);
+    TheImage *myImg = (TheImage*) src;
+    Canny(myImg->blurred, myImg->edged, myImg->thresh1, myImg->thresh2, myImg->aperture);
 
     createTrackbar("Thresh1", "Output1", &myImg->thresh1, 100, cannyThresholdOneTrackbar, &*myImg);
-        createTrackbar("Thresh2", "Output1", &myImg->thresh2, 300, cannyThresholdTwoTrackbar, &*myImg);
-        createTrackbar("Aperture", "Output1", &myImg->aperture, 7, cannyAperatureTrackbar, &*myImg);
+    createTrackbar("Thresh2", "Output1", &myImg->thresh2, 300, cannyThresholdTwoTrackbar, &*myImg);
+    createTrackbar("Aperture", "Output1", &myImg->aperture, 7, cannyAperatureTrackbar, &*myImg);
 
-        imshow( "Output1", myImg->edged );
+    imshow( "Output1", myImg->edged );
 }
 
 //transform2 - takes the edged image and applies houghlinesp based on slidebar values
