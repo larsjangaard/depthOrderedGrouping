@@ -9,19 +9,10 @@
 #include "imageDetails.h"
 
 ImageDetails::ImageDetails() {
-	cannyThresh1 = 18;
-	cannyThresh2 = 65;
-	cannyAperature = 3;
 
-	houghAccumulator = 40;
-	houghMinLen = 10;
-	houghMaxGap = 2;
-
-    proximity = 80;
-    vertical = 4;
 }
 
-Mat ImageDetails::openOriginal(string imageLocation) {
+Mat* ImageDetails::openOriginal(string imageLocation) {
     string matName = "original";
     Mat image = imread(imageLocation);
     
@@ -30,26 +21,29 @@ Mat ImageDetails::openOriginal(string imageLocation) {
     showImage(matName, image);
     
     cvWaitKey(0);
+
+	return &image;
 }
 
 Mat* ImageDetails::getMat(string imageName) {
-	return Mats[imageName];
+	return &Mats[imageName];
 }
 
 Mat* ImageDetails::insertMat(string matName, Mat imageMat) {
     Mats[matName] = imageMat;
-    return Mats[matName];
+    return &Mats[matName];
 }
 
-vector<Vec4i> ImageDetails::getLineList(string lineListName) {
-    return LineList[lineListName];
+vector<Vec4i>* ImageDetails::getLineList(string lineListName) {
+    return &LineLists[lineListName];
 }
 
-vector<Vec4i> ImageDetails::insertLineList(string lineListName, vector<Vec4i> lineList) {
-    LineList[lineListName] = lineList;
+vector<Vec4i>* ImageDetails::insertLineList(string lineListName, vector<Vec4i> lineList) {
+    LineLists[lineListName] = lineList;
+	return &LineLists[lineListName];
 }
 
 void ImageDetails::showImage(string windowName, Mat mat) {
-    namedWindow(windownName);
+    namedWindow(windowName);
     imshow(windowName, mat);
 }

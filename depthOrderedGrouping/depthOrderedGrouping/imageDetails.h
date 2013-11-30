@@ -13,26 +13,29 @@
 #include <map>
 #include <vector>
 #include <string.h>
+#include <opencv/cv.h>
+#include <opencv/highgui.h>
 
+using namespace cv;
 using namespace std;
 
 class ImageDetails {
   public:
     ImageDetails();
     
-    Mat openOriginal(string);
+    Mat* openOriginal(string);
 	
     Mat* getMat(string);
     Mat* insertMat(string, Mat);
     
-    vector<Vec4i> getLineList(string);
-    bool insertLineList(string, vector<int>);
+    vector<Vec4i>* getLineList(string);
+    vector<Vec4i>* insertLineList(string, vector<Vec4i>);
     
   private:
 	void showImage(string, Mat);
 	
     map<string, Mat> Mats;
-    typedef map<string, vector<int>> LineLists;
+    map<string, vector<Vec4i>> LineLists;
 
     int proximity; // for vanishing point regions
     float vertical; // acceptable slope to consider vertical

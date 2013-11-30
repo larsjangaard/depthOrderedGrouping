@@ -12,35 +12,42 @@
 
 #include <iostream>
 #include <string.h>
+#include <opencv/cv.h>
+#include <opencv/highgui.h>
+#include "imageDetails.h"
 
+using namespace cv;
 using namespace std;
 
 class LineFinder {
   public:
-	LineFinder(ImageDetails);
+	LineFinder(ImageDetails*);
 	
 	void greyImage();
 	void blurImage();
 
-	void detectEdges();
+	static void detectEdges();
+	static void detectLines();
 	
   private:
 
-    cannyThresholdOneTrackbar(int);
-    cannyThresholdTwoTrackbar(int);
-    cannyAperatureTrackbar(int);
+    static void cannyThresholdOneTrackbar(int, void*);
+    static void cannyThresholdTwoTrackbar(int, void*);
+    static void cannyAperatureTrackbar(int, void*);
 	
-	houghAccumulatorTrackbar(int);
-	houghMinLenTrackbar(int);
-	houghMaxGapTrackbar(int);    
+	static void houghAccumulatorTrackbar(int, void*);
+	static void houghMinLenTrackbar(int, void*);
+	static void houghMaxGapTrackbar(int, void*);
 
-	ImageDetails* imageDetails;
+	static ImageDetails* imageDetails;
 	
     // Canny parameters
-    int cannyThresh1, cannyThresh2, cannyAperture;
+    static int cannyThresh1;
+	static int cannyThresh2;
+	static int cannyAperture;
 
     // HoughlinesP parameters
-    int houghAccumulator, houghMinLen, houghMaxGap;
+    static int houghAccumulator, houghMinLen, houghMaxGap;
 };
 
 #endif /* defined(__depthOrderedGrouping__LineFinder__) */
