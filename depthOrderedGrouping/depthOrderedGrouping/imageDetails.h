@@ -27,15 +27,22 @@ class ImageDetails {
 	
     Mat* getMat(string);
     Mat* insertMat(string, Mat);
+	Mat* insertMat(string);
     
     vector<Vec4i>* getLineList(string);
-    vector<Vec4i>* insertLineList(string, vector<Vec4i>);
+    vector<Vec4i>* insertLineList(string, vector<Vec4i>*);
+	vector<Vec4i>* insertLineList(string);
+
+	vector<Point>* getPointList(string);
+	vector<Point>* insertPointList(string, vector<Point>);
+	vector<Point>* insertPointList(string);
     
   private:
 	void showImage(string, Mat);
 	
     map<string, Mat> Mats;
     map<string, vector<Vec4i>> LineLists;
+	map<string, vector<Point>> PointLists;
 
     int proximity; // for vanishing point regions
     float vertical; // acceptable slope to consider vertical

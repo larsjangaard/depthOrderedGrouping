@@ -7,6 +7,7 @@
 //
 
 #include "imageDetails.h"
+#include <string.h>
 
 ImageDetails::ImageDetails() {
 
@@ -34,16 +35,40 @@ Mat* ImageDetails::insertMat(string matName, Mat imageMat) {
     return &Mats[matName];
 }
 
+Mat* ImageDetails::insertMat(string matName) {
+	Mats[matName] = *(new Mat); //*newMat;
+	return &Mats[matName];
+}
+
 vector<Vec4i>* ImageDetails::getLineList(string lineListName) {
     return &LineLists[lineListName];
 }
 
-vector<Vec4i>* ImageDetails::insertLineList(string lineListName, vector<Vec4i> lineList) {
-    LineLists[lineListName] = lineList;
+vector<Vec4i>* ImageDetails::insertLineList(string lineListName, vector<Vec4i> *lineList) {
+    LineLists[lineListName] = *lineList;
+	return &LineLists[lineListName];
+}
+
+vector<Vec4i>* ImageDetails::insertLineList(string lineListName) {
+    LineLists[lineListName] = *(new vector<Vec4i>);
 	return &LineLists[lineListName];
 }
 
 void ImageDetails::showImage(string windowName, Mat mat) {
     namedWindow(windowName);
     imshow(windowName, mat);
+}
+
+vector<Point>* ImageDetails::getPointList(string pointListName) {
+	return &PointLists[pointListName];
+}
+
+vector<Point>* ImageDetails::insertPointList(string pointListName, vector<Point> pointList) {
+	PointLists[pointListName] = pointList;
+	return &PointLists[pointListName];
+}
+
+vector<Point>* ImageDetails::insertPointList(string pointListName) {
+	PointLists[pointListName] = *(new vector<Point>);
+	return &PointLists[pointListName];
 }

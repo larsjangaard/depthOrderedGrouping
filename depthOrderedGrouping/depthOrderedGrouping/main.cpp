@@ -6,7 +6,9 @@
 
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
+
 using namespace cv;
+using namespace std;
 
 // struct holds the images and data we want to maintain
 // while processing through different methods
@@ -40,6 +42,11 @@ void cannyAperatureTrackbar(int, void*);
 void houghAccumulatorTrackbar(int, void*);
 void houghMinLenTrackbar(int, void*);
 void houghMaxGapTrackbar(int, void*);
+void goodLineProxTrackbar(int, void*);
+
+void getLineDetails(TheImage*, vector<Vec4i>*, vector<Vec4i>*, vector<Vec4i>*, vector<Vec4i>*);
+Point findMeanVanPts(vector<Point>*, vector<Vec4i>*);
+void trimLines(TheImage*, vector<vector<Vec4i>*>*, vector<Vec4i>*, vector<Vec4i>*, vector<Point>*);
 
 // findGoodLines
 // finds your two vanishing points (left and right)
@@ -52,115 +59,119 @@ void findGoodLines(TheImage *myImg,
                                    vector<Vec4i> *leftLines,
                                    vector<Vec4i> *rightLines,
                                    vector<Vec4i> *vertLines,
-                                   vector<vector<Vec4i>> *allVanPts = new vector<vector<Vec4i>>,
+                                   vector<vector<Vec4i>*> *allVanPts = new vector<vector<Vec4i>*>,
                                    vector<Point> *meanVanPts = new vector<Point>) {
 
-        vector<Vec4i> leftVanPts, rightVanPts;
+    vector<Vec4i> leftVanPts, rightVanPts;
 
-        // go thru all the houghline segments and get their coords/slopes/intercepts
-        for ( int i=0; i < myLines->size()-1; i++ ) {
-                Vec4i line_i = myLines->at(i);
-                float mi, ci, x1_i, y1_i, x2_i, y2_i, dx_i, dy_i;
-                x1_i = line_i[0];        y1_i = line_i[1];
-                x2_i = line_i[2];        y2_i = line_i[3];
-                dx_i = x2_i - x1_i;        dy_i = y2_i - y1_i;
+	getLineDetails(myImg, myLines, vertLines, &leftVanPts, &rightVanPts);
 
-                if (dx_i == 0) dx_i = .0001; // vertical
-                mi = (dy_i / dx_i); // slope
-                if (abs(mi) > myImg->vertical) vertLines->push_back(line_i); // this will go to 'goodLines' by default
-                else {
-                        ci = y1_i - (mi*x1_i); // intercept
+    // 2-element vector, holds left and right vanishing point vectors
+    allVanPts->push_back(&leftVanPts);
+    allVanPts->push_back(&rightVanPts);
 
-                        // do the same thing for every other line to find intersection
-                        for ( int j=i+1; j < myLines->size(); j++ ) {
-                                Vec4i line_j = myLines->at(j);
-                                float mj, cj, x1_j, y1_j, x2_j, y2_j, dx_j, dy_j, intxnX, intxnY;
-                                x1_j = line_j[0];        y1_j = line_j[1];
-                                x2_j = line_j[2];        y2_j = line_j[3];
-                                dx_j = x2_j - x1_j;        dy_j = y2_j - y1_j;
-                                if (dx_j == 0) dx_j = -.0001; // vertical
-                                mj = (dy_j / dx_j); // slope
+	meanVanPts->push_back(findMeanVanPts(meanVanPts, &leftVanPts));
+	meanVanPts->push_back(findMeanVanPts(meanVanPts, &rightVanPts));
+
+	trimLines(myImg, allVanPts, leftLines, rightLines, meanVanPts);
+}
+
+void getLineDetails(TheImage *img, vector<Vec4i> *myLines, vector<Vec4i> *vertLines, vector<Vec4i> *leftVanPts, vector<Vec4i> *rightVanPts) {
+	if(vertLines == NULL) vertLines = new vector<Vec4i>;
+
+    // go thru all the houghline segments and get their coords/slopes/intercepts
+    for ( int i=0; i < myLines->size(); i++ ) {
+            Vec4i line_i = myLines->at(i);
+            float mi, ci, x1_i, y1_i, x2_i, y2_i, dx_i, dy_i;
+            x1_i = line_i[0];        y1_i = line_i[1];
+            x2_i = line_i[2];        y2_i = line_i[3];
+            dx_i = x2_i - x1_i;        dy_i = y2_i - y1_i;
+
+            if (dx_i == 0) dx_i = .0001; // vertical
+            mi = (dy_i / dx_i); // slope
+            if (abs(mi) > img->vertical) vertLines->push_back(line_i); // this will go to 'goodLines' by default
+            else {
+                    ci = y1_i - (mi*x1_i); // intercept
+
+                    // do the same thing for every other line to find intersection
+                    for ( int j=i+1; j < myLines->size(); j++ ) {
+                            Vec4i line_j = myLines->at(j);
+                            float mj, cj, x1_j, y1_j, x2_j, y2_j, dx_j, dy_j, intxnX, intxnY;
+                            x1_j = line_j[0];        y1_j = line_j[1];
+                            x2_j = line_j[2];        y2_j = line_j[3];
+                            dx_j = x2_j - x1_j;        dy_j = y2_j - y1_j;
+                            if (dx_j == 0) dx_j = -.0001; // vertical
+                            mj = (dy_j / dx_j); // slope
                                 
-                                if (abs(mj) > myImg->vertical && j == myLines->size()-1)
-                                        vertLines->push_back(line_j);
-                                else {
-                                        cj = y1_j - (mj*x1_j);
+                            if (abs(mj) > img->vertical && j == myLines->size()-1)
+                                    vertLines->push_back(line_j);
+                            else {
+                                    cj = y1_j - (mj*x1_j);
 
-                                        if( (mi - mj) == 0) { // parallel
-                                                mi += .0001;
-                                                mj -= .0001;
-                                        }
+                                    if( (mi - mj) == 0) { // parallel
+                                            mi += .0001;
+                                            mj -= .0001;
+                                    }
 
-                                        // intersections
-                                        intxnX = (cj - ci) / (mi - mj);
-                                        intxnY = (mi*intxnX) + ci;
-                                        Vec4i curVanPt;
+                                    // intersections
+                                    intxnX = (cj - ci) / (mi - mj);
+                                    intxnY = (mi*intxnX) + ci;
+                                    Vec4i curVanPt;
 
-                                        if ( (intxnY >= 0) && (intxnY < myImg->original.rows) ) {
-                                                curVanPt[0] = i;
-                                                curVanPt[1] = j;
-                                                curVanPt[2] = intxnX;
-                                                curVanPt[3] = intxnY;
+                                    if ( (intxnY >= 0) && (intxnY < img->original.rows) ) {
+                                            curVanPt[0] = i;
+                                            curVanPt[1] = j;
+                                            curVanPt[2] = intxnX;
+                                            curVanPt[3] = intxnY;
 
-                                                // collect the good vanishing points
-                                                // CHANGE FOR FINAL
-                                                if (intxnX < 265 && intxnX > 0) leftVanPts.push_back(curVanPt);
-                                                else if (intxnX > 650 && intxnX < myImg->original.cols) rightVanPts.push_back(curVanPt);
-                                        }
-                                }
-                        }
-                }
-        }
-        // 2-element vector, holds left and right vanishing point vectors
-        allVanPts->push_back(leftVanPts);
-        allVanPts->push_back(rightVanPts);
+                                            // collect the good vanishing points
+                                            // CHANGE FOR FINAL
+                                            if (intxnX < 265 && intxnX > 0) leftVanPts->push_back(curVanPt);
+                                            else if (intxnX > 650 && intxnX < img->original.cols) rightVanPts->push_back(curVanPt);
+                                    }
+                            }
+                    }
+            }
+    }
+}
 
-        Mat leftLabels, rightLabels;
-        Mat leftCenters, rightCenters;
-        Mat leftMat(leftVanPts.size(), 2, CV_32F);
-        Mat rightMat(rightVanPts.size(), 2, CV_32F);
+Point findMeanVanPts(vector<Point> *meanVanPts, vector<Vec4i> *vanPts) {
+        Mat labels;
+        Mat centers;
+        Mat mat(vanPts->size(), 2, CV_32F);
         const int ITERNS = 10;                // iterations
         const int ATMPTS = 1;                // attempts
         
-        for (int i=0; i < leftVanPts.size(); i++) {
-                leftMat.at<float>(i,0) = (float)leftVanPts[i][2];
-                leftMat.at<float>(i,1) = (float)leftVanPts[i][3];
+        for (int i = 0; i < vanPts->size(); i++) {
+                mat.at<float>(i,0) = (float)(*vanPts)[i][2];
+                mat.at<float>(i,1) = (float)(*vanPts)[i][3];
         }
-        kmeans(leftMat, 1, leftLabels, TermCriteria(CV_TERMCRIT_ITER, ITERNS, 1.0), ATMPTS, KMEANS_PP_CENTERS, leftCenters);
-        int leftX = (int)leftCenters.at<float>(0,0);
-        int leftY = (int)leftCenters.at<float>(0,1);
-        meanVanPts->push_back(Point(leftX, leftY));
 
-        for (int i=0; i < rightVanPts.size(); i++) {
-                rightMat.at<float>(i,0) = (float)rightVanPts[i][2];
-                rightMat.at<float>(i,1) = (float)rightVanPts[i][3];
+        kmeans(mat, 1, labels, TermCriteria(CV_TERMCRIT_ITER, ITERNS, 1.0), ATMPTS, KMEANS_PP_CENTERS, centers);
+
+		return Point(centers.at<float>(0,0), centers.at<float>(0,1));
+}
+
+void trimLines(TheImage *img, vector<vector<Vec4i>*> *allVanPts, vector<Vec4i> *leftLines, vector<Vec4i> *rightLines, vector<Point> *meanVanPts) {
+    for (int i=0; i < allVanPts->size(); i++) {
+        vector<Vec4i> curVanPts = *allVanPts->at(i);
+        vector<Vec4i> *curGoodLines = (i==0) ? leftLines : rightLines;
+        float curMeanX = meanVanPts->at(i).x;
+        float curMeanY = meanVanPts->at(i).y;
+
+        for (int j=0; j < curVanPts.size(); j++) {
+            Vec4i curVanPt = curVanPts[j];
+            circle(img->vanished, Point(curVanPt[2], curVanPt[3]),3, Scalar(0,255,0));
+            int curVanPtX = curVanPt[2];
+            int curVanPtY = curVanPt[3];
+                
+			if (abs(curMeanX - curVanPtX) < img->proximity &&
+				abs(curMeanY - curVanPtY) < img->proximity) {
+			        curGoodLines->push_back(img->allLines[curVanPt[0]]);
+                    curGoodLines->push_back(img->allLines[curVanPt[1]]);
+            }
         }
-        kmeans(rightMat, 1, rightLabels, TermCriteria(CV_TERMCRIT_ITER, ITERNS, 1.0), ATMPTS, KMEANS_PP_CENTERS, rightCenters);
-        int rightX = (int)rightCenters.at<float>(0,0);
-        int rightY = (int)rightCenters.at<float>(0,1);
-        meanVanPts->push_back(Point(rightX, rightY));
-
-        // go thru all the vanishing points
-        for (int i=0; i < allVanPts->size(); i++) {
-                vector<Vec4i> curVanPts = allVanPts->at(i);
-                vector<Vec4i> *curGoodLines = (i==0) ? leftLines : rightLines;
-                float curMeanX = meanVanPts->at(i).x;
-                float curMeanY = meanVanPts->at(i).y;
-
-                for (int j=0; j < curVanPts.size(); j++) {
-                        Vec4i curVanPt = curVanPts[j];
-                        circle(myImg->vanished, Point(curVanPt[2], curVanPt[3]),3, Scalar(0,255,0));
-                        int curVanPtX = curVanPt[2];
-                        int curVanPtY = curVanPt[3];
-                        if (abs(curMeanX - curVanPtX) < myImg->proximity &&
-                                abs(curMeanY - curVanPtY) < myImg->proximity) {
-                                        int allLinesInd0 = curVanPt[0];
-                                        int allLinesInd1 = curVanPt[1];
-                                        curGoodLines->push_back(myImg->allLines[allLinesInd0]);
-                                        curGoodLines->push_back(myImg->allLines[allLinesInd1]);
-                        }
-                }
-        }
+    }
 }
 
 
@@ -220,26 +231,44 @@ void transform2(void *src) {
 void transform3(void *src) {
         TheImage *myImg = (TheImage*) src;
         myImg->vanished = myImg->original.clone();
-        vector<Vec4i> leftLines, rightLines, vertLines;
-        vector<vector<Vec4i>> allVanPts, goodLines;
-        vector<Point> meanVanPts;
+        vector<Vec4i> *leftLines, *rightLines, *vertLines;
+        vector<vector<Vec4i>*> *allVanPts = new vector<vector<Vec4i>*>;
+		vector<vector<Vec4i>*> *goodLines = new vector<vector<Vec4i>*>;
+        vector<Point> *meanVanPts = new vector<Point>;
 
-        findGoodLines(myImg, &myImg->allLines, &leftLines, &rightLines, &vertLines, &allVanPts, &meanVanPts);
-        goodLines.push_back(leftLines);
-        goodLines.push_back(rightLines);
-        goodLines.push_back(vertLines);
+    /*vector<Vec4i> leftVanPts, rightVanPts;
+
+	getLineDetails(myImg, &myImg->allLines, vertLines, &leftVanPts, &rightVanPts);
+
+    // 2-element vector, holds left and right vanishing point vectors
+    allVanPts->push_back(&leftVanPts);
+    allVanPts->push_back(&rightVanPts);
+
+	meanVanPts->push_back(findMeanVanPts(meanVanPts, &leftVanPts));
+	meanVanPts->push_back(findMeanVanPts(meanVanPts, &rightVanPts));
+
+	trimLines(myImg, allVanPts, leftLines, rightLines, meanVanPts);*/
+
+        findGoodLines(myImg, &myImg->allLines, *&leftLines, *&rightLines, *&vertLines, *&allVanPts, *&meanVanPts);
+        goodLines->push_back(leftLines);
+        goodLines->push_back(rightLines);
+        goodLines->push_back(vertLines);
 
         // draw all the 'goodLines'
-        for( int i=0; i < goodLines.size(); i++ ) {
-                vector<Vec4i> curLines = goodLines[i];
+        for( int i=0; i < goodLines->size(); i++ ) {
+                vector<Vec4i> curLines = *(*goodLines)[i];
                 for( int j=0; j < curLines.size(); j++) {
                         Vec4i l = curLines[j];
                         line(myImg->vanished, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255));
                 }
         }
-        circle(myImg->vanished, meanVanPts[0], 6, Scalar(0,100,0), 1);
-        circle(myImg->vanished, meanVanPts[1], 6, Scalar(0,100,0), 1);
-        imshow("Output3", myImg->vanished);
+        circle(myImg->vanished, (*meanVanPts)[0], 6, Scalar(0,100,0), 1);
+        circle(myImg->vanished, (*meanVanPts)[1], 6, Scalar(0,100,0), 1);
+        
+        // Trackbar for vanishing points filter (goes slow)
+        createTrackbar("prox", "Output3", &myImg->proximity, 300, goodLineProxTrackbar, &*myImg);		
+		
+		imshow("Output3", myImg->vanished);
 }
 
 // on_trackbar1 - threshold 1
@@ -289,7 +318,7 @@ void houghMaxGapTrackbar(int maxGap_slider, void *src) {
 }
 
 // on_trackbar7 - vanishing point region sizes
-void on_trackbar7(int vanSize_slider, void *src) {
+void goodLineProxTrackbar(int vanSize_slider, void *src) {
         if (vanSize_slider==0) vanSize_slider=1;
         ( (TheImage*) src )->proximity = vanSize_slider;
         transform3(src);
@@ -341,9 +370,6 @@ int main(int argc, char *argv[]) {
 
         namedWindow("Output3");
         transform3((void*)myImage);
-
-        // Trackbar for vanishing points filter (goes slow)
-        createTrackbar("prox", "Output3", &myImage->proximity, 300, on_trackbar7, &*myImage);
 
         cvWaitKey(0);
         imwrite("vanished.jpg", myImage->vanished);

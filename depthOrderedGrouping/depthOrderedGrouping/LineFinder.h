@@ -28,6 +28,8 @@ class LineFinder {
 
 	static void detectEdges();
 	static void detectLines();
+
+	static void findValidLines();
 	
   private:
 
@@ -39,7 +41,13 @@ class LineFinder {
 	static void houghMinLenTrackbar(int, void*);
 	static void houghMaxGapTrackbar(int, void*);
 
+	static void goodLineProxTrackbar(int, void*);
+
 	static ImageDetails* imageDetails;
+
+	static void getLineDetails();
+	static Point findMeanVanPts(vector<Vec4i>*);
+	static void trimLines(vector<Point>);
 	
     // Canny parameters
     static int cannyThresh1;
@@ -48,6 +56,10 @@ class LineFinder {
 
     // HoughlinesP parameters
     static int houghAccumulator, houghMinLen, houghMaxGap;
+
+	// findValidLine parameters
+	static int verticalThresh;
+	static int validLineProx;
 };
 
 #endif /* defined(__depthOrderedGrouping__LineFinder__) */
