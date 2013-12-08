@@ -110,6 +110,10 @@ void LineFinder::findValidLines() {
 
 	trimLines(*vanPts);
 
+	goodLines->push_back(imageDetails->getLineList("leftVanLines"));
+	goodLines->push_back(imageDetails->getLineList("rightVanLines"));
+	goodLines->push_back(imageDetails->getLineList("vertLines"));
+
     // draw all the 'goodLines'
     for( int i=0; i < goodLines->size(); i++ ) {
         vector<Vec4i> *curLines = (*goodLines)[i];
