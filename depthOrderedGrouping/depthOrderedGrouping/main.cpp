@@ -1,23 +1,30 @@
-// main.cpp
-// This code groups edges into lines, line clusters, quadrilaterals, and
-// depth-ordered planes based on cues in the single image
-// Author: Lars Jangaard, Olajumoke Fajinmi, William Hoffrance
-// Date: 11/3/2013
-
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
+<<<<<<< HEAD
 #include "ImageDetails.h"
 #include "LineFinder.h"
 using namespace cv;
 
+=======
+#include "imageDetails.h"
+#include "LineFinder.h"
 
+using namespace cv;
 
-// main - This method performs greyscale conversion, blur, and canny operations to an image.
-// preconditions - 159.jpg exists in the code directory and is a valid JPEG.
-// postconditions - intermediate results are displayed on the screen and
-//                                        the final result is saved to the file system as output.jpg.
 int main(int argc, char *argv[]) {
+	ImageDetails imageDetails;
 
+	imageDetails.openOriginal("borders.jpg");
+
+	Mat* img = imageDetails.getMat("original");
+>>>>>>> convertMain
+
+	namedWindow("Original");
+	imshow("Original", *img);
+
+	vector<Vec4i> testVector;
+
+<<<<<<< HEAD
     // Read in and display test image
 	//ImageDetails *myImageDetails = new ImageDetails("159.jpg");
 	ImageDetails *myImgDetails = new ImageDetails("borders.jpg");
@@ -32,4 +39,26 @@ int main(int argc, char *argv[]) {
 	myLineFinder->findInitGoodLines();
 
     return 0;
+=======
+	imageDetails.insertLineList("testVector", &testVector);
+
+	vector<Vec4i>* returnVector = imageDetails.getLineList("testVector");
+
+	LineFinder* lineFinder = new LineFinder(&imageDetails);
+
+	lineFinder->greyImage();
+	lineFinder->blurImage();
+	lineFinder->detectEdges();
+
+	cvWaitKey(0);
+	lineFinder->detectLines();
+
+	cvWaitKey(0);
+
+	lineFinder->findValidLines();
+
+	cvWaitKey(0);
+
+	return 0;
+>>>>>>> convertMain
 }
