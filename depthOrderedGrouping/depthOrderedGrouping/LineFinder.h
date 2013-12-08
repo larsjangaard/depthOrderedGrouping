@@ -21,8 +21,15 @@ using namespace std;
 
 class LineFinder {
 
+<<<<<<< HEAD
 	public:
 		LineFinder(ImageDetails*);
+=======
+	static void detectEdges();
+	static void detectLines();
+
+	static void findValidLines();
+>>>>>>> convertMain
 	
 		static void greyImage();
 		static void blurImage();
@@ -54,7 +61,17 @@ class LineFinder {
 		static void houghMinLenTrackbar(int, void*);
 		static void houghMaxGapTrackbar(int, void*);
 
+<<<<<<< HEAD
 		static ImageDetails* imageDetails;
+=======
+	static void goodLineProxTrackbar(int, void*);
+
+	static ImageDetails* imageDetails;
+
+	static void getLineDetails();
+	static Point findMeanVanPts(vector<Vec4i>*);
+	static void trimLines(vector<Point>);
+>>>>>>> convertMain
 	
 		// Canny parameters
 		static int cannyThresh1;
@@ -66,8 +83,17 @@ class LineFinder {
 		static int houghMinLen;
 		static int houghMaxGap;
 
+<<<<<<< HEAD
 		static int proximity; // for vanishing point regions
 		static float vertical; // acceptable slope to consider vertical
+=======
+    // HoughlinesP parameters
+    static int houghAccumulator, houghMinLen, houghMaxGap;
+
+	// findValidLine parameters
+	static int verticalThresh;
+	static int validLineProx;
+>>>>>>> convertMain
 };
 
 #endif /* defined(__depthOrderedGrouping__LineFinder__) */
