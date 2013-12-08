@@ -14,19 +14,11 @@ ImageDetails* LineFinder::imageDetails;
 int LineFinder::cannyThresh1;
 int LineFinder::cannyThresh2;
 int LineFinder::cannyAperture;
-<<<<<<< HEAD
 int LineFinder::houghAccumulator;
 int LineFinder::houghMinLen;
 int LineFinder::houghMaxGap;
 int LineFinder::proximity; // for vanishing point regions
 float LineFinder::vertical; // acceptable slope to consider vertical
-=======
-int LineFinder::houghAccumulator, LineFinder::houghMinLen, LineFinder::houghMaxGap;
-int LineFinder::validLineProx;
-int LineFinder::verticalThresh;
-
-ImageDetails* LineFinder::imageDetails;
->>>>>>> convertMain
 
 LineFinder::LineFinder(ImageDetails* img) {
     imageDetails = img;
@@ -39,13 +31,8 @@ LineFinder::LineFinder(ImageDetails* img) {
 	houghMinLen = 10;
 	houghMaxGap = 2;
 
-<<<<<<< HEAD
 	proximity = 80;
 	vertical = 4;
-=======
-	verticalThresh = 4;
-	validLineProx = 80;
->>>>>>> convertMain
 }
 
 void LineFinder::greyImage() {
@@ -92,7 +79,6 @@ void LineFinder::detectEdges() {
 }
 
 void LineFinder::detectLines() {
-<<<<<<< HEAD
 
 	Mat houghed = imageDetails->getMat("original")->clone();
 	string matName = "houghed";
@@ -212,119 +198,20 @@ void LineFinder::findGoodLines(string myLines,
 					vertLinesVec->push_back(line_j);
 				else {
 					cj = y1_j - (mj*x1_j);
-=======
-	imageDetails->insertMat("houghed", (*imageDetails->getMat("original")).clone());
-    vector<Vec4i> houghpResult;
-	namedWindow("Output2");
-        
-	HoughLinesP(*imageDetails->getMat("edged"), houghpResult, 1, CV_PI/180, houghAccumulator, houghMinLen, houghMaxGap);
-
-	imageDetails->insertLineList("houghpResult", &houghpResult);
-
-	for( int i = 0; i < (*imageDetails->getLineList("houghpResult")).size(); i++ ) {
-		Vec4i l = (*imageDetails->getLineList("houghpResult"))[i];
-        line(*imageDetails->getMat("houghed"), Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255));
-    }
-
-	createTrackbar("Accum", "Output2", &houghAccumulator, 150, houghAccumulatorTrackbar);
-    createTrackbar("Min Length", "Output2", &houghMinLen, 100, houghMinLenTrackbar);
-    createTrackbar("Max Gap", "Output2", &houghMaxGap, 100, houghMaxGapTrackbar);
-
-	imshow("Output2", *imageDetails->getMat("houghed"));
-}
-
-void LineFinder::findValidLines() {
-	imageDetails->insertMat("vanished", (*imageDetails->getMat("original")).clone());
-
-	vector<Point> *vanPts = new vector<Point>;
-	vector<vector<Vec4i>*> *goodLines = new vector<vector<Vec4i>*>;
-
-	getLineDetails();
-
-	vanPts->push_back(findMeanVanPts(imageDetails->getLineList("leftVanLines")));
-	vanPts->push_back(findMeanVanPts(imageDetails->getLineList("rightVanLines")));
-
-	trimLines(*vanPts);
-
-    // draw all the 'goodLines'
-    for( int i=0; i < goodLines->size(); i++ ) {
-        vector<Vec4i> *curLines = (*goodLines)[i];
-        
-		for( int j=0; j < curLines->size(); j++) {
-            Vec4i l = (*curLines)[j];
-            line(*imageDetails->getMat("vanished"), Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255));
-        }
-    }
-
-    circle(*imageDetails->getMat("vanished"), (*vanPts)[0], 6, Scalar(0,100,0), 1);
-    circle(*imageDetails->getMat("vanished"), (*vanPts)[1], 6, Scalar(0,100,0), 1);
-        
-    // Trackbar for vanishing points filter (goes slow)
-    createTrackbar("Prox", "Output3", &validLineProx, 300, goodLineProxTrackbar);		
-		
-	imshow("Output3", *imageDetails->getMat("vanished"));
-}
-
-void LineFinder::getLineDetails() {
-	//Mat *original = imageDetails->getMat("original");
-
-	imageDetails->insertLineList("vertLines");
-	imageDetails->insertLineList("leftVanLines");
-	imageDetails->insertLineList("rightVanLines");
-
-    // go thru all the houghline segments and get their coords/slopes/intercepts
-	for ( int i=0; i < imageDetails->getLineList("houghpResult")->size(); i++ ) {
-        Vec4i line_i = imageDetails->getLineList("houghpResult")->at(i);
-        float mi, ci, x1_i, y1_i, x2_i, y2_i, dx_i, dy_i;
-        x1_i = line_i[0];        y1_i = line_i[1];
-        x2_i = line_i[2];        y2_i = line_i[3];
-        dx_i = x2_i - x1_i;        dy_i = y2_i - y1_i;
-
-        if (dx_i == 0) dx_i = .0001; // vertical
-        mi = (dy_i / dx_i); // slope
-		if (abs(mi) > verticalThresh) imageDetails->getLineList("vertLines")->push_back(line_i); // this will go to 'goodLines' by default
-        else {
-            ci = y1_i - (mi*x1_i); // intercept
-
-            // do the same thing for every other line to find intersection
-            for ( int j=i+1; j < imageDetails->getLineList("houghpResult")->size(); j++ ) {
-				Vec4i line_j = imageDetails->getLineList("houghpResult")->at(j);
-				float mj, cj, x1_j, y1_j, x2_j, y2_j, dx_j, dy_j, intxnX, intxnY;
-				x1_j = line_j[0];        y1_j = line_j[1];
-				x2_j = line_j[2];        y2_j = line_j[3];
-				dx_j = x2_j - x1_j;        dy_j = y2_j - y1_j;
-				if (dx_j == 0) dx_j = -.0001; // vertical
-				mj = (dy_j / dx_j); // slope
-
-				if (abs(mj) > verticalThresh && j == imageDetails->getLineList("houghpResult")->size()-1)
-					imageDetails->getLineList("vertLines")->push_back(line_j);
-				else {
-					cj = y1_j - (mj*x1_j);
-
->>>>>>> convertMain
 					if( (mi - mj) == 0) { // parallel
 						mi += .0001;
 						mj -= .0001;
 					}
-<<<<<<< HEAD
-=======
-
->>>>>>> convertMain
 					// intersections
 					intxnX = (cj - ci) / (mi - mj);
 					intxnY = (mi*intxnX) + ci;
 					Vec4i curVanPt;
-<<<<<<< HEAD
 					
-=======
-
->>>>>>> convertMain
 					if ( (intxnY >= 0) && (intxnY < imageDetails->getMat("original")->rows) ) {
 						curVanPt[0] = i;
 						curVanPt[1] = j;
 						curVanPt[2] = intxnX;
 						curVanPt[3] = intxnY;
-<<<<<<< HEAD
 						
 						// collect the good vanishing points
 						// CHANGE FOR FINAL
@@ -395,69 +282,6 @@ void LineFinder::getLineDetails() {
 	imageDetails->insertLineList(myVertLines, *vertLinesVec);
 }
 
-=======
-
-						// collect the good vanishing points
-						// CHANGE FOR FINAL
-						if (intxnX < 265 && intxnX > 0) imageDetails->getLineList("leftVanLines")->push_back(curVanPt);
-						else if (intxnX > 650 && intxnX < imageDetails->getMat("original")->cols) imageDetails->getLineList("rightVanLines")->push_back(curVanPt);
-					}
-                }
-            }
-        }
-    }
-}
-
-Point LineFinder::findMeanVanPts(vector<Vec4i> *vanPts) {
-    Mat labels;
-    Mat centers;
-    Mat mat(vanPts->size(), 2, CV_32F);
-    const int ITERNS = 10;                // iterations
-    const int ATMPTS = 1;                // attempts
-        
-    for (int i = 0; i < vanPts->size(); i++) {
-        mat.at<float>(i,0) = (float)(*vanPts)[i][2];
-        mat.at<float>(i,1) = (float)(*vanPts)[i][3];
-    }
-
-    kmeans(mat, 1, labels, TermCriteria(CV_TERMCRIT_ITER, ITERNS, 1.0), ATMPTS, KMEANS_PP_CENTERS, centers);
-
-	return Point(centers.at<float>(0,0), centers.at<float>(0,1));
-}
-
-void LineFinder::trimLines(vector<Point> vanPts) {
-	vector<vector<Vec4i>*> allVanLines;
-	vector<vector<Vec4i>*> curGoodLines;
-
-	allVanLines.push_back(imageDetails->getLineList("leftVanLines"));
-	allVanLines.push_back(imageDetails->getLineList("rightVanLines"));
-
-    for (int i=0; i < allVanLines.size(); i++) {
-        vector<Vec4i> curVanPts = *allVanLines.at(i);
-		curGoodLines.push_back(new vector<Vec4i>);
-
-        float curMeanX = vanPts.at(i).x;
-        float curMeanY = vanPts.at(i).y;
-
-        for (int j=0; j < curVanPts.size(); j++) {
-            Vec4i curVanPt = curVanPts[j];
-			circle(*imageDetails->getMat("vanished"), Point(curVanPt[2], curVanPt[3]),3, Scalar(0,255,0));
-            int curVanPtX = curVanPt[2];
-            int curVanPtY = curVanPt[3];
-
-			if (abs(curMeanX - curVanPtX) < validLineProx &&
-				abs(curMeanY - curVanPtY) < validLineProx) {
-
-				curGoodLines.at(i)->push_back((*imageDetails->getLineList("houghpResult"))[curVanPt[0]]);
-                curGoodLines.at(i)->push_back((*imageDetails->getLineList("houghpResult"))[curVanPt[1]]);
-            }
-        }
-    }
-
-	imageDetails->insertLineList("leftVanLines", curGoodLines.at(0));
-	imageDetails->insertLineList("rightVanLines", curGoodLines.at(1));
-}
->>>>>>> convertMain
 
 // cannyThresholdOneTrackbar - cannyThresh1
 // the lower the threshold the more lines you get in non-edgy places
@@ -485,29 +309,22 @@ void LineFinder::cannyAperatureTrackbar(int slider, void *src) {
 }
 
 // houghAccumulatorTrackbar - hough threshold
-void LineFinder::houghAccumulatorTrackbar(int slider, void *src) {
+void LineFinder::houghAccumulatorTrackbar(int slider, void*) {
     if (slider == 0) slider = 1;
     houghAccumulator = slider;
     detectLines();
 }
 
 // houghMinLenTrackbar - min line length
-void LineFinder::houghMinLenTrackbar(int slider, void *src) {
+void LineFinder::houghMinLenTrackbar(int slider, void*) {
     if (slider == 0) slider = 1;
     houghMinLen = slider;
     detectLines();
 }
 
 // houghMaxGapTrackbar - hough threshold
-void LineFinder::houghMaxGapTrackbar(int slider, void *src) {
+void LineFinder::houghMaxGapTrackbar(int slider, void*) {
     if (slider == 0) slider = 1;
     houghMaxGap = slider;
     detectLines();
-}
-
-void LineFinder::goodLineProxTrackbar(int slider, void *src) {
-    if (slider == 0) slider = 1;
-
-    validLineProx = slider;
-    findValidLines();
 }
