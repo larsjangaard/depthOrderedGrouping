@@ -6,7 +6,7 @@
  *  Copyright 2013 __MyCompanyName__. All rights reserved.
  *
  */
-#pragma once
+
 #ifndef __depthOrderedGrouping__LineFinder__
 #define __depthOrderedGrouping__LineFinder__
 
@@ -20,50 +20,27 @@ using namespace cv;
 using namespace std;
 
 class LineFinder {
+  public:
+	LineFinder(ImageDetails*);
+	
+	void greyImage();
+	void blurImage();
 
-<<<<<<< HEAD
-	public:
-		LineFinder(ImageDetails*);
-=======
 	static void detectEdges();
 	static void detectLines();
 
 	static void findValidLines();
->>>>>>> convertMain
 	
-		static void greyImage();
-		static void blurImage();
-		static void detectEdges();
-		static void detectLines();
-		static void findInitGoodLines();
+  private:
 
-		// findGoodLines
-		// finds your two vanishing points (left and right)
-		// input name line vector already stored
-		// and names of line vectors that will be
-		// created, stored, and populated
-		// (left, right, and vertical)
-		// optional vectors for returning vanishing points
-		static void findGoodLines(string myLines,
-								  string myLeftLines,
-								  string myRightLines,
-								  string myVertLines,
-								  vector<vector<Vec4i>> *allVanPts,
-								  vector<Point> *meanVanPts);
+    static void cannyThresholdOneTrackbar(int, void*);
+    static void cannyThresholdTwoTrackbar(int, void*);
+    static void cannyAperatureTrackbar(int, void*);
 	
-	private:
-		
-		static void cannyThresholdOneTrackbar(int, void*);
-		static void cannyThresholdTwoTrackbar(int, void*);
-		static void cannyAperatureTrackbar(int, void*);
-	
-		static void houghAccumulatorTrackbar(int, void*);
-		static void houghMinLenTrackbar(int, void*);
-		static void houghMaxGapTrackbar(int, void*);
+	static void houghAccumulatorTrackbar(int, void*);
+	static void houghMinLenTrackbar(int, void*);
+	static void houghMaxGapTrackbar(int, void*);
 
-<<<<<<< HEAD
-		static ImageDetails* imageDetails;
-=======
 	static void goodLineProxTrackbar(int, void*);
 
 	static ImageDetails* imageDetails;
@@ -71,29 +48,18 @@ class LineFinder {
 	static void getLineDetails();
 	static Point findMeanVanPts(vector<Vec4i>*);
 	static void trimLines(vector<Point>);
->>>>>>> convertMain
 	
-		// Canny parameters
-		static int cannyThresh1;
-		static int cannyThresh2;
-		static int cannyAperture;
+    // Canny parameters
+    static int cannyThresh1;
+	static int cannyThresh2;
+	static int cannyAperture;
 
-		// HoughlinesP parameters
-		static int houghAccumulator;
-		static int houghMinLen;
-		static int houghMaxGap;
-
-<<<<<<< HEAD
-		static int proximity; // for vanishing point regions
-		static float vertical; // acceptable slope to consider vertical
-=======
     // HoughlinesP parameters
     static int houghAccumulator, houghMinLen, houghMaxGap;
 
 	// findValidLine parameters
 	static int verticalThresh;
 	static int validLineProx;
->>>>>>> convertMain
 };
 
 #endif /* defined(__depthOrderedGrouping__LineFinder__) */
