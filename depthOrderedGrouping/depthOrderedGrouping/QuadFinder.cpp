@@ -97,7 +97,6 @@ void QuadFinder::completeQuad(Vec4i ref, String refVanPt, Vec4i comp, String com
 
 		}
 
-
 		double slope1 = getLineSlope(newLine);
 		double slope2 = getLineSlope(newLine2);
 
