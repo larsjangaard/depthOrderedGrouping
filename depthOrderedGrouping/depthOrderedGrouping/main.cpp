@@ -1,7 +1,9 @@
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
+
 #include "imageDetails.h"
 #include "LineFinder.h"
+#include "QuadFinder.h"
 
 using namespace cv;
 
@@ -35,6 +37,8 @@ int main(int argc, char *argv[]) {
 	lineFinder->findValidLines();
 
 	cvWaitKey(0);
+
+	QuadFinder* quadFinder = new QuadFinder(&imageDetails);
 
 	return 0;
 }
