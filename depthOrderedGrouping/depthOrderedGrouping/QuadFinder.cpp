@@ -20,50 +20,26 @@ void QuadFinder::findCloseLines() {
 	
 	vector<vector<Vec4i>*> *quadrilaterals = new vector<vector<Vec4i>*>;
 
-	cout << vanLines.size() << " " << vanLines.at(0).size() << " " << vanLines[1].size() << " " << vanLines[2].size() << endl;
-
 	for(int i = 0; i < vanLines.size()-1; i++) {
 		for(int j = i+1; j < vanLines.size(); j++) {
-			cout << "I: " << i << " J: " << j << endl;
-
 			for(int ref = 0; ref < vanLines[i].size(); ref++) {
 				for(int comp = 0; comp < vanLines[j].size() && ref < vanLines[i].size(); comp++) {
 					if(closeEnough(vanLines[i].at(ref), vanLines[j].at(comp))) {
 
 						String refString, compString;
 
-						if(i == 0) {
-							refString = leftVanLines;
-						} else {
-							refString = rightVanLines;
-						}
-
+						i == 0 ? refString = leftVanLines : refString = rightVanLines;
 						j == 1 ? compString = rightVanLines : compString = vertLines;
-
-						vector<Vec4i> insertVec;
-						insertVec.push_back(vanLines[i].at(ref));
-						insertVec.push_back(vanLines[j].at(comp));
-						quadrilaterals->push_back(&insertVec);
-
-						cout << "REF: " << ref << " COMP: " << comp << endl;
-
-						//cout << "ORIGINAL: " << vanLines[i].at(ref) << " ";
 
 						completeQuad(vanLines[i].at(ref), refString, vanLines[j].at(comp), compString);
 
 						vanLines[i].at(ref) = Vec4i(-1, -1, -1, -1);
 						vanLines[j].at(comp) = Vec4i(-1, -1, -1, -1);
-
-						//cout << "AFTER: " << vanLines[i].at(ref) << endl;
-
-						//if(ref < vanLines[i].size()) ref++;
 					}
 				}
 			}
 		}
 	}
-
-	quadCand = quadrilaterals;
 
 	cvWaitKey();
 }
@@ -72,7 +48,6 @@ bool QuadFinder::closeEnough(Vec4i ref, Vec4i comp) {
 	if(ref == comp) return false;
 
 	if(abs(ref[0] - comp[0]) < 10 && abs(ref[1] - comp[1]) < 10) {
-		cout << ref << " " << comp << "   ";	
 		return true;
 	}
 
@@ -105,8 +80,6 @@ void QuadFinder::completeQuad(Vec4i ref, String refVanPt, Vec4i comp, String com
 		else {
 			leftFur = furthestPnt(comp, ref);
 			leftLine = createNewLine(leftFur, vanPts->at(1));
-			//leftFur = furthestPnt(ref, comp);
-			//leftLine = createNewLine(rightFur, vanPts->at(1), comp);
 		}
 
 		double slope = getLineSlope(leftLine);
@@ -180,17 +153,11 @@ Point QuadFinder::furthestPnt(Vec4i ref, Vec4i comp) {
 
 double QuadFinder::getLineSlope(Vec4i ref) {
 	double refSlope = (double)(ref[1] - ref[3]) / (double)(ref[0] - ref[2]);
-
-	cout << "REFSLOPE: " << refSlope << endl;
-
 	return refSlope;
 } 
 
 double QuadFinder::getLineIntercept(Vec4i ref, double refSlope) {
 	double refB = (double)ref[1] - (double)((double)refSlope * (double)ref[0]);
-
-	cout << "refB: " << refB << endl;
-
 	return refB;
 }
 
@@ -212,6 +179,5 @@ Point QuadFinder::findLineIntercepts(Vec4i line1, Vec4i line2) {
 
 double QuadFinder::lineDist(Vec4i ref) {
 	double distance = sqrt(pow(abs(ref[0] - ref[2]),2.0) + pow(abs(ref[1] - ref[3]), 2.0));
-
 	return distance;
 }
