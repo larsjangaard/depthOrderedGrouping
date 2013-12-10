@@ -110,6 +110,8 @@ void LineFinder::findValidLines() {
 
 	trimLines(*vanPts);
 
+	imageDetails->insertPointList("vanPts", *vanPts);
+
 	goodLines->push_back(imageDetails->getLineList("leftVanLines"));
 	goodLines->push_back(imageDetails->getLineList("rightVanLines"));
 	goodLines->push_back(imageDetails->getLineList("vertLines"));
