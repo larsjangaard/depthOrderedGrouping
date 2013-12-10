@@ -4,6 +4,7 @@
 #include "imageDetails.h"
 #include "LineFinder.h"
 #include "QuadFinder.h"
+#include "QuadGrouper.h"
 
 using namespace cv;
 
@@ -39,6 +40,8 @@ int main(int argc, char *argv[]) {
 	cvWaitKey(0);
 
 	QuadFinder* quadFinder = new QuadFinder(&imageDetails);
+	QuadGrouper *quadGrouper = new QuadGrouper(&imageDetails);
+	//QuadSorter *quadSorter = new QuadSOrter(&imageDetails);
 
 	return 0;
 }
