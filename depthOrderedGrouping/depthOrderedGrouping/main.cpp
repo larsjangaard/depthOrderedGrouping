@@ -5,6 +5,7 @@
 #include "LineFinder.h"
 #include "QuadFinder.h"
 #include "QuadGrouper.h"
+#include "LineGrouping.h"
 
 using namespace cv;
 
@@ -42,9 +43,16 @@ int main(int argc, char *argv[]) {
 	QuadFinder* quadFinder = new QuadFinder(&imageDetails);
 
 	vector<vector<Point>*>* vec = quadFinder->getQuads();
-	
-	QuadGrouper *quadGrouper = new QuadGrouper(&imageDetails);	
+
+	LineGrouping lineGrouping(&lineFinder, &imageDetails);
+	vector<vector<Vec4i>> retVec = lineGrouping.groupLines(*imageDetails.getMat("greyScale"));
+
+	for(int i = 0; i < retVec.size(); i++) {
+		cout << "VEC SIZE: " << retVec[i].size() << endl;
+	}
+	//QuadGrouper *quadGrouper = new QuadGrouper(&imageDetails);	
 	//QuadSorter *quadSorter = new QuadSOrter(&imageDetails);
+	cvWaitKey(0);
 
 	return 0;
 }

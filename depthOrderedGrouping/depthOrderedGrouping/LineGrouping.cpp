@@ -28,14 +28,14 @@ double LineGrouping::angularDifference(Vec4i lineA, Vec4i lineB)
 	if (denom1 == 0)
 	    m1 = 90;
 	else
-	    m1 = atan((lineA[3] - lineA[1]) / denom1);
+	    m1 = atan((lineA[3] - lineA[1]) / (double) denom1);
 
 	
     int denom2 = (lineB[2] - lineB[0]);
 	if (denom2 == 0)
 	    m2 = 90;
 	else
-	    m2 = atan((lineB[3] - lineB[1]) / denom2);
+	    m2 = atan((lineB[3] - lineB[1]) / (double) denom2);
 
 	double angleDiff = abs(m1 - m2);
 
@@ -87,7 +87,7 @@ double LineGrouping::calcParallelism(int distance, double angleDiff, double over
 {
   double x, p1 = 2 * pow( 3.0, 2.0), p2 = 2 * pow( 0.1, 2.0), p3 = 2 * pow( 0.1, 2.0);
 
-  distance = pow( distance, 2);
+  distance = pow( distance, 2.0);
   x = ( -( distance / p1 ) - ( pow( ( 1 - overlappingRatio ), 2) / p2) - ( ( 1 - angleDiff ) / p3 ) );
   
   return exp(x);
@@ -102,7 +102,7 @@ double LineGrouping::calcOrthogonality(int distance,double angleDiff)
 { 
 
   double x, o1 = 2 * pow( 2.0, 2.0), o2 = 2 * pow( 0.3, 2.0);
-  distance = pow( distance, 2);
+  distance = pow( distance, 2.0);
   x = ( -( distance / o1) - ( angleDiff / o2) );
 
   return exp(x);
