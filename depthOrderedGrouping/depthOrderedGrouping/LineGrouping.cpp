@@ -1,11 +1,16 @@
 #include "LineGrouping.h"
 
+LineFinder* linefinder;
+ImageDetails* imageDetails;
 
-LineGrouping::LineGrouping(void)
+LineGrouping::LineGrouping(LineFinder* lineFinder, ImageDetails* imagedetails)
 {
+	linefinder = lineFinder;
+	imageDetails = imagedetails;
+
 }
 
-double getOverlappingRatio(Vec2i overlapDistance, int dist)
+double LineGrouping::getOverlappingRatio(Vec2i overlapDistance, int dist)
 {
 
 	double overlapRatio = ((overlapDistance[1] - overlapDistance[0]) / dist);
@@ -14,7 +19,7 @@ double getOverlappingRatio(Vec2i overlapDistance, int dist)
 	
 }
 
-double angularDifference(Vec4i lineA, Vec4i lineB)
+double LineGrouping::angularDifference(Vec4i lineA, Vec4i lineB)
 { 
 	double m1, m2;
 	int denom1 = (lineA[2] - lineA[0]);
@@ -37,7 +42,7 @@ double angularDifference(Vec4i lineA, Vec4i lineB)
 	return pow(cos(angleDiff), 2);
 }
 
-Vec2i findMinPoint(Vec4i line)
+Vec2i LineGrouping::findMinPoint(Vec4i line)
 {
 	Vec2i minPoints; 
 	  if (line[1] > line[3])
@@ -59,7 +64,7 @@ Vec2i findMinPoint(Vec4i line)
 //the horizontal and vertical difference between the start point of one line and 
 //the end point of the other.
 //It returns an exponential value which is the result of the curvilinearity calcualtion
-double calcCurvilinearity(double angleDiff, double distanceH, double distanceV)
+double LineGrouping::calcCurvilinearity(double angleDiff, double distanceH, double distanceV)
 {
 
   double x, c1 = 2 * pow(3.0,2.0), c2 = 2 * pow( 0.1, 2.0 ), c3= 2 * pow( 0.7, 2.0 );
@@ -78,7 +83,7 @@ double calcCurvilinearity(double angleDiff, double distanceH, double distanceV)
 //the overlapping ratio of the lines and the minimum distance between the endpoints of 
 //one line to the line distance of the other
 //It returns an exponential value which is the result of the parallelism calcualtion
-double calcParallelism(int distance, double angleDiff, double overlappingRatio)
+double LineGrouping::calcParallelism(int distance, double angleDiff, double overlappingRatio)
 {
   double x, p1 = 2 * pow( 3.0, 2.0), p2 = 2 * pow( 0.1, 2.0), p3 = 2 * pow( 0.1, 2.0);
 
@@ -93,7 +98,7 @@ double calcParallelism(int distance, double angleDiff, double overlappingRatio)
 //and the minimum distance between the endpoints of one line to the line distance 
 //of the other
 //It returns an exponential value which is the result of the orthogonality calcualtion
-double calcOrthogonality(int distance,double angleDiff)
+double LineGrouping::calcOrthogonality(int distance,double angleDiff)
 { 
 
   double x, o1 = 2 * pow( 2.0, 2.0), o2 = 2 * pow( 0.3, 2.0);
@@ -108,9 +113,9 @@ double calcOrthogonality(int distance,double angleDiff)
 //It takes as input a vector of vector cluster line points and the image which the
 //lines will overlay.
 //currently, red is assigned to lines of cluster 1...
-void displayLines(vector<vector<Vec4i>>& Clusters, Mat image)
+void LineGrouping::displayLines(vector<vector<Vec4i>>& Clusters, Mat image)
 {
-  
+  //Mat image =*imageE;
   for( size_t i = 0; i < Clusters.size(); i++ )
   {
 	vector<Vec4i> cluster = Clusters[i];
@@ -134,7 +139,7 @@ void displayLines(vector<vector<Vec4i>>& Clusters, Mat image)
    waitKey();
 }
 
-vector<vector<Vec4i>> reclusterLines(LineFinder* linefinder,vector<Vec4i> cluster1, vector<Vec4i> cluster2, vector<Vec4i> cluster3)
+vector<vector<Vec4i>> LineGrouping::reclusterLines(LineFinder* linefinder,vector<Vec4i> cluster1, vector<Vec4i> cluster2, vector<Vec4i> cluster3)
 {
 	
 	//LineFinder::findMeanVanPts(vector<Vec4i> *vanPts) 
@@ -146,7 +151,7 @@ vector<vector<Vec4i>> reclusterLines(LineFinder* linefinder,vector<Vec4i> cluste
 //to get vectors of good lines.
 //It takes as an input a pointer to the LineFinder class
 //and returns a merged vector of three vectors
-vector<Vec4i> mergeLineVector (ImageDetails* imageDetails)
+vector<Vec4i> LineGrouping::mergeLineVector (ImageDetails* imageDetails)
 {
   vector<Vec4i> lines;
   vector<Vec4i>* linesL, *linesR, *linesV ;
@@ -175,7 +180,7 @@ vector<Vec4i> mergeLineVector (ImageDetails* imageDetails)
 }
 
 
-vector<vector<Vec4i>> groupLines(Mat image,LineFinder* linefinder, ImageDetails* imageDetails)
+vector<vector<Vec4i>> LineGrouping:: groupLines(Mat image)
 {
   
   double overlappingRatio;
@@ -454,13 +459,13 @@ vector<vector<Vec4i>> groupLines(Mat image,LineFinder* linefinder, ImageDetails*
   Clusters.push_back(cluster2);
   Clusters.push_back(cluster3);
 
-
+  
   displayLines(Clusters, image);
   cout<<eigenGap;
 
   return Clusters;
 }
 
-LineGrouping::~LineGrouping(void)
-{
-}
+//LineGrouping::~LineGrouping(LineFinder* lineFinder, ImageDetails* imagedetail)
+//{
+//}

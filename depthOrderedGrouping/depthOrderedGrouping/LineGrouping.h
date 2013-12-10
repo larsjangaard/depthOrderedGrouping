@@ -14,9 +14,9 @@ using namespace std;
 class LineGrouping
 {
 public:
-	LineGrouping(void);
-	vector<vector<Vec4i>> groupLines(Mat, LineFinder*, ImageDetails*);
-	~LineGrouping(void);
+	LineGrouping(LineFinder*, ImageDetails*);
+	vector<vector<Vec4i>> groupLines(Mat);
+	//~LineGrouping(LineFinder*, ImageDetails*);
 
 private:
 	double getOverlappingRatio(Vec2i, int );
@@ -30,8 +30,7 @@ private:
 	vector<Vec4i> mergeLineVector (ImageDetails*);
 
 	ImageDetails* imageDetails;
-	LineFinder* lineFinder
+	LineFinder* lineFinder;
 };
-
 
 
