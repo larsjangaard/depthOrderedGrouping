@@ -15,7 +15,7 @@ using namespace ClipperLib;
 
 class QuadGrouper {
 public:
-	QuadGrouper(ImageDetails*);
+	QuadGrouper(ImageDetails*, vector<vector<Point>*>*);
 	~QuadGrouper(void);
 	void groupQuads();
 
@@ -26,6 +26,7 @@ public:
 private:
 
 	ImageDetails *imgDets;
+	vector<vector<Point>*> *ungroupedQuads;
 
 	void groupQuadVec(vector<vector<Point>>, vector<vector<Point>>*&);
 	bool tryCombine(vector<Point>, vector<Point>, vector<Point>*&);

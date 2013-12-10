@@ -1,8 +1,9 @@
 #include "QuadGrouper.h"
 
 
-QuadGrouper::QuadGrouper(ImageDetails *imageDetails) {
+QuadGrouper::QuadGrouper(ImageDetails *imageDetails, vector<vector<Point>*> *quads) {
 	imgDets = imageDetails;
+	ungroupedQuads = quads;
 	groupQuads();
 }
 
@@ -19,6 +20,10 @@ void QuadGrouper::groupQuads() {
 	groupQuadVec(*ungroupedLeftQuads, groupedLeftQuads);
 	groupQuadVec(*ungroupedRightQuads, groupedRightQuads);
 	groupQuadVec(*ungroupedVertQuads, groupedVertQuads);
+
+	//imgDets->insertQuadList("groupedLeftQuads", groupedLeftQuads);
+	//imgDets->insertQuadList("groupepRightQuads", groupedRightQuads);
+	//imgDets->insertQuadList("groupedVertQuads", groupedVertQuads);
 }
 
 void QuadGrouper::groupQuadVec(vector<vector<Point>> ungroupedQuads,
@@ -132,6 +137,7 @@ float QuadGrouper::getIntxnArea(vector<Point> quad, vector<Point> rect, vector<P
 
 vector<Point> QuadGrouper::combineQuads(vector<Point> quadA, vector<Point> quadB) {
 	int left, right, topLeftY, topRightY, botLeftY, botRightY;
+	topLeftY = topRightY = botLeftY = botRightY = NULL;
 	left = right = quadA.at(0).x;
 	for (int i=0; i<4; i++) {
 		left = min(left, quadA[i].x);
