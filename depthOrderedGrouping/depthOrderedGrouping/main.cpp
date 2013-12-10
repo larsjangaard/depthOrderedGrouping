@@ -23,22 +23,23 @@ int main(int argc, char *argv[]) {
 
 	vector<Vec4i>* returnVector = imageDetails.getLineList("testVector");
 
-	LineFinder* lineFinder = new LineFinder(&imageDetails);
+	LineFinder lineFinder(&imageDetails);// = new LineFinder(&imageDetails);
 
-	lineFinder->greyImage();
-	lineFinder->blurImage();
-	lineFinder->detectEdges();
-
-	cvWaitKey(0);
-	lineFinder->detectLines();
+	lineFinder.greyImage();
+	lineFinder.blurImage();
+	lineFinder.detectEdges();
 
 	cvWaitKey(0);
+	lineFinder.detectLines();
 
-	lineFinder->findValidLines();
+	cvWaitKey(0);
+
+	lineFinder.findValidLines();
 
 	cvWaitKey(0);
 
 	QuadFinder* quadFinder = new QuadFinder(&imageDetails);
-
+	vector<vector<Point>*>* vec = quadFinder->getQuads();
+	cvWaitKey(0);
 	return 0;
 }
