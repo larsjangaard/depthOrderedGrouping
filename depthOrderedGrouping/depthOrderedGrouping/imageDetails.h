@@ -36,7 +36,8 @@ class ImageDetails {
 	vector<Point>* getPointList(string);
 	vector<Point>* insertPointList(string, vector<Point>);
 	vector<Point>* insertPointList(string);
-    
+
+	vector<Vec4i>* appendLineList(string, vector<Vec4i>*);
   private:
 	void showImage(string, Mat);
 	

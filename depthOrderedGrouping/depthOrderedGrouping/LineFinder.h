@@ -10,6 +10,8 @@
 #ifndef __depthOrderedGrouping__LineFinder__
 #define __depthOrderedGrouping__LineFinder__
 
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <iostream>
 #include <string.h>
 #include <opencv/cv.h>
@@ -30,6 +32,7 @@ class LineFinder {
 	static void detectLines();
 
 	static void findValidLines();
+	static void findValidLines(vector<Vec4i>*, string, string, string);
 	
   private:
 
@@ -46,8 +49,13 @@ class LineFinder {
 	static ImageDetails* imageDetails;
 
 	static void getLineDetails();
+	static void getLineDetails(string, string, string);
+
 	static Point findMeanVanPts(vector<Vec4i>*);
+	static Point findMeanVanPts(vector<Vec4i>*, string, string, string);
+
 	static void trimLines(vector<Point>);
+	static void trimLines(vector<Point>, string, string, string);
 	
     // Canny parameters
     static int cannyThresh1;

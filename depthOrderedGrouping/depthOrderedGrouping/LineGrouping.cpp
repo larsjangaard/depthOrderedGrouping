@@ -439,9 +439,17 @@ vector<vector<Vec4i>> LineGrouping:: groupLines(Mat image)
 
 	  else if (cvIsNaN(lambda.at<double>(i))== 1)
 	  {
-
+		  int t = _fpclass(lambda.at<double>(i));
+		  if (t== _FPCLASS_QNAN)
+		  {
 		  	  cluster2.push_back(lines[i]);
 			  cout<< "the lambdaValue ::"<<lambda.at<double>(i)<<"\n";
+		  }
+		  else
+		  {
+			 cluster2.push_back(lines[i]);
+			  cout<< "the lambdaValue xx"<<lambda.at<double>(i)<<"\n";
+		  }
 
 	  }
 

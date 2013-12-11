@@ -1,6 +1,8 @@
 #ifndef __depthOrderedGrouping__QuadFinder__
 #define __depthOrderedGrouping__QuadFinder__
 
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <iostream>
 #include <string.h>
 #include <opencv/cv.h>
@@ -32,6 +34,7 @@ class QuadFinder
 
 		ImageDetails* imageDetails;
 		vector<vector<Point>*>* quadCand;
+		vector<Vec4i>* displayVec;
 		vector<Point> findClosestPnt(Vec4i, Vec4i);
 
 		double lineDist(Vec4i);
