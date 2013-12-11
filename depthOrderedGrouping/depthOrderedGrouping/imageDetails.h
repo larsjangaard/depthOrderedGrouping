@@ -39,7 +39,7 @@ class ImageDetails {
 
 	vector<Vec4i>* appendLineList(string, vector<Vec4i>*);
 	bool lineListContains(string);
-	void removeList(string);
+	void removeLineList(string);
   private:
 	void showImage(string, Mat);
 	

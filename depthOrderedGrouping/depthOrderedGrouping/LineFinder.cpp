@@ -102,13 +102,14 @@ void LineFinder::findValidLines() {
 
 	vector<Point> *vanPts = new vector<Point>;
 	vector<vector<Vec4i>*> *goodLines = new vector<vector<Vec4i>*>;
+	string lineLists[] = { "leftVanLines", "rightVanLines", "vertLines" };
 
-	getLineDetails();
+	getLineDetails(lineLists);
 
-	vanPts->push_back(findMeanVanPts(imageDetails->getLineList("leftVanLines")));
-	vanPts->push_back(findMeanVanPts(imageDetails->getLineList("rightVanLines")));
+	vanPts->push_back(findMeanVanPts(imageDetails->getLineList("leftVanLinestemp")));
+	vanPts->push_back(findMeanVanPts(imageDetails->getLineList("rightVanLinestemp")));
 
-	trimLines(*vanPts);
+	trimLines(*vanPts, lineLists);
 
 	imageDetails->insertPointList("vanPts", *vanPts);
 
@@ -137,23 +138,21 @@ void LineFinder::findValidLines() {
 
 void LineFinder::findValidLines(vector<Vec4i> *lineList, string left, string right, string vert) {
 	imageDetails->insertMat("vanished", (*imageDetails->getMat("original")).clone());
-
 	imageDetails->insertLineList("houghpResult", lineList);
+
+	string lineLists[] = { left, right, vert };
 
 	vector<Point> *vanPts = new vector<Point>;
 	vector<vector<Vec4i>*> *goodLines = new vector<vector<Vec4i>*>;
 
-	getLineDetails(left, right, vert);
+	getLineDetails(lineLists);
 
 	string leftTemp = left + "temp";
 	string rightTemp = right + "temp";
-	vanPts->push_back(findMeanVanPts(imageDetails->getLineList(leftTemp), left, right, vert));
-	vanPts->push_back(findMeanVanPts(imageDetails->getLineList(rightTemp), left, right, vert));
+	vanPts->push_back(findMeanVanPts(imageDetails->getLineList(leftTemp)));
+	vanPts->push_back(findMeanVanPts(imageDetails->getLineList(rightTemp)));
 
-	trimLines(*vanPts, left, right, vert);
-
-	//imageDetails->appendLineList(left
-
+	trimLines(*vanPts, lineLists);
 	imageDetails->insertPointList("vanPts", *vanPts);
 
 	goodLines->push_back(imageDetails->getLineList(left));
@@ -175,100 +174,30 @@ void LineFinder::findValidLines(vector<Vec4i> *lineList, string left, string rig
         
     // Trackbar for vanishing points filter (goes slow)
     createTrackbar("Prox", "Output3", &validLineProx, 300, goodLineProxTrackbar);		
-		
 	imshow("Output3", *imageDetails->getMat("vanished"));
 }
 
-void LineFinder::getLineDetails() {
-	imageDetails->insertLineList("vertLines");
-	imageDetails->insertLineList("leftVanLines");
-	imageDetails->insertLineList("rightVanLines");
+void LineFinder::insertLists(string tempLists[]) {
+	for(int i = 0; i < 3; i++) {
+		imageDetails->insertLineList(tempLists[i] + "temp");
 
-    // go thru all the houghline segments and get their coords/slopes/intercepts
-	for ( int i=0; i < imageDetails->getLineList("houghpResult")->size(); i++ ) {
-        Vec4i line_i = imageDetails->getLineList("houghpResult")->at(i);
-        float mi, ci, x1_i, y1_i, x2_i, y2_i, dx_i, dy_i;
-        x1_i = line_i[0];        y1_i = line_i[1];
-        x2_i = line_i[2];        y2_i = line_i[3];
-        dx_i = x2_i - x1_i;        dy_i = y2_i - y1_i;
-
-        if (dx_i == 0) dx_i = .0001; // vertical
-        mi = (dy_i / dx_i); // slope
-		if (abs(mi) > verticalThresh) imageDetails->getLineList("vertLines")->push_back(line_i); // this will go to 'goodLines' by default
-        else {
-            ci = y1_i - (mi*x1_i); // intercept
-
-            // do the same thing for every other line to find intersection
-            for ( int j=i+1; j < imageDetails->getLineList("houghpResult")->size(); j++ ) {
-				Vec4i line_j = imageDetails->getLineList("houghpResult")->at(j);
-				float mj, cj, x1_j, y1_j, x2_j, y2_j, dx_j, dy_j, intxnX, intxnY;
-				x1_j = line_j[0];        y1_j = line_j[1];
-				x2_j = line_j[2];        y2_j = line_j[3];
-				dx_j = x2_j - x1_j;        dy_j = y2_j - y1_j;
-				if (dx_j == 0) dx_j = -.0001; // vertical
-				mj = (dy_j / dx_j); // slope
-
-				if (abs(mj) > verticalThresh && j == imageDetails->getLineList("houghpResult")->size()-1)
-					imageDetails->getLineList("vertLines")->push_back(line_j);
-				else {
-					cj = y1_j - (mj*x1_j);
-
-					if( (mi - mj) == 0) { // parallel
-						mi += .0001;
-						mj -= .0001;
-					}
-
-					// intersections
-					intxnX = (cj - ci) / (mi - mj);
-					intxnY = (mi*intxnX) + ci;
-					Vec4i curVanPt;
-
-					if ( (intxnY >= 0) && (intxnY < imageDetails->getMat("original")->rows) ) {
-						curVanPt[0] = i;
-						curVanPt[1] = j;
-						curVanPt[2] = intxnX;
-						curVanPt[3] = intxnY;
-
-						// collect the good vanishing points
-						// CHANGE FOR FINAL
-						if (intxnX < 265 && intxnX > 0) imageDetails->getLineList("leftVanLines")->push_back(curVanPt);
-						else if (intxnX > 650 && intxnX < imageDetails->getMat("original")->cols) imageDetails->getLineList("rightVanLines")->push_back(curVanPt);
-					}
-                }
-            }
-        }
+		if(!imageDetails->lineListContains(tempLists[i])) {
+			imageDetails->insertLineList(tempLists[i]);
+		}
 	}
 }
 
-bool cmpVec(Vec4i a, Vec4i b) {
-	return a[0] < b[0];
-}
+void LineFinder::getLineDetails(string lineLists[]) {
+	insertLists(lineLists);
 
-void LineFinder::getLineDetails(string left, string right, string vert) {
-	string temp = "temp";
-	string leftTemp = left+temp;
-	string rightTemp = right+temp;
-	string vertTemp = vert+temp;
+	// declare comparison operator for set iterator.
+	struct cmp {
+		bool operator()(Vec4i a, Vec4i b) {
+			return a[0] < b[0];
+		}
+	};
 
-	string tempStrings[] = { left, right, vert };
-	string tempStrings1[] = { leftTemp, rightTemp, vertTemp };
-
-	set<Vec4i, bool (*)(Vec4i, Vec4i)> leftSet(cmpVec);
-	set<Vec4i, bool (*)(Vec4i, Vec4i)> rightSet(cmpVec);
-	set<Vec4i, bool (*)(Vec4i, Vec4i)> vertSet(cmpVec);
-
-	vector<set<Vec4i, bool(*)(Vec4i, Vec4i)>> setVerts;
-
-	if(!imageDetails->lineListContains(left) 
-		&& !imageDetails->lineListContains(right) && !imageDetails->lineListContains(vert)) {
-		imageDetails->insertLineList(left);
-		imageDetails->insertLineList(right);
-		imageDetails->insertLineList(vert);
-	}
-
-	imageDetails->insertLineList(leftTemp);
-	imageDetails->insertLineList(rightTemp);
-	imageDetails->insertLineList(vertTemp);
+	set<Vec4i, cmp> leftSet, rightSet, vertSet;
 
     // go thru all the houghline segments and get their coords/slopes/intercepts
 	for ( int i=0; i < imageDetails->getLineList("houghpResult")->size(); i++ ) {
@@ -280,7 +209,7 @@ void LineFinder::getLineDetails(string left, string right, string vert) {
 
         if (dx_i == 0) dx_i = .0001; // vertical
         mi = (dy_i / dx_i); // slope
-		if (abs(mi) > verticalThresh) vertSet.insert(line_i); //imageDetails->getLineList(vertTemp)->push_back(line_i); // this will go to 'goodLines' by default
+		if (abs(mi) > verticalThresh) vertSet.insert(line_i); // this will go to 'goodLines' by default
         else {
             ci = y1_i - (mi*x1_i); // intercept
 
@@ -295,7 +224,7 @@ void LineFinder::getLineDetails(string left, string right, string vert) {
 				mj = (dy_j / dx_j); // slope
 
 				if (abs(mj) > verticalThresh && j == imageDetails->getLineList("houghpResult")->size()-1)
-					vertSet.insert(line_j); //imageDetails->getLineList(vertTemp)->push_back(line_j);
+					vertSet.insert(line_j);
 				else {
 					cj = y1_j - (mj*x1_j);
 
@@ -317,24 +246,24 @@ void LineFinder::getLineDetails(string left, string right, string vert) {
 
 						// collect the good vanishing points
 						// CHANGE FOR FINAL
-						if (intxnX < 265 && intxnX > 0) leftSet.insert(curVanPt); // imageDetails->getLineList(leftTemp)->push_back(curVanPt);
-						else if (intxnX > 650 && intxnX < imageDetails->getMat("original")->cols) rightSet.insert(curVanPt); // imageDetails->getLineList(rightTemp)->push_back(curVanPt);
+						if (intxnX < 265 && intxnX > 0) leftSet.insert(curVanPt);
+						else if (intxnX > 650 && intxnX < imageDetails->getMat("original")->cols) rightSet.insert(curVanPt);
 					}
                 }
             }
         }
     }
 
+	vector<set<Vec4i, cmp>> setVerts;
+
 	setVerts.push_back(leftSet);
 	setVerts.push_back(rightSet);
 	setVerts.push_back(vertSet);
 
+	// save sets to temp lists
 	for(int i = 0; i < setVerts.size(); i++) {
-		int j = 0;
-		for(set<Vec4i, bool(*)(Vec4i, Vec4i)>::iterator it = setVerts.at(i).begin(); it != setVerts.at(i).end(); it++) {
-			Vec4i vec = *it;
-			imageDetails->getLineList(tempStrings1[i])->push_back(*it);
-			j++;
+		for(set<Vec4i, cmp>::iterator it = setVerts.at(i).begin(); it != setVerts.at(i).end(); it++) {
+			imageDetails->getLineList(lineLists[i]+"temp")->push_back(*it);
 		}
 	}
 }
@@ -344,7 +273,7 @@ Point LineFinder::findMeanVanPts(vector<Vec4i> *vanPts) {
     Mat centers;
     Mat mat(vanPts->size(), 2, CV_32F);
     const int ITERNS = 10;                // iterations
-    const int ATMPTS = 1;                // attempts
+    const int ATMPTS = 1;                 // attempts
         
     for (int i = 0; i < vanPts->size(); i++) {
         mat.at<float>(i,0) = (float)(*vanPts)[i][2];
@@ -356,66 +285,15 @@ Point LineFinder::findMeanVanPts(vector<Vec4i> *vanPts) {
 	return Point(centers.at<float>(0,0), centers.at<float>(0,1));
 }
 
-Point LineFinder::findMeanVanPts(vector<Vec4i> *vanPts, string left, string right, string vert) {
-    Mat labels;
-    Mat centers;
-    Mat mat(vanPts->size(), 2, CV_32F);
-    const int ITERNS = 10;                // iterations
-    const int ATMPTS = 1;                // attempts
-        
-    for (int i = 0; i < vanPts->size(); i++) {
-        mat.at<float>(i,0) = (float)(*vanPts)[i][2];
-        mat.at<float>(i,1) = (float)(*vanPts)[i][3];
-    }
-
-    kmeans(mat, 1, labels, TermCriteria(CV_TERMCRIT_ITER, ITERNS, 1.0), ATMPTS, KMEANS_PP_CENTERS, centers);
-
-	return Point(centers.at<float>(0,0), centers.at<float>(0,1));
-}
-
-void LineFinder::trimLines(vector<Point> vanPts) {
-	vector<vector<Vec4i>*> allVanLines;
-	vector<vector<Vec4i>*> curGoodLines;
-
-	allVanLines.push_back(imageDetails->getLineList("leftVanLines"));
-	allVanLines.push_back(imageDetails->getLineList("rightVanLines"));
-
-    for (int i=0; i < allVanLines.size(); i++) {
-        vector<Vec4i> curVanPts = *allVanLines.at(i);
-		curGoodLines.push_back(new vector<Vec4i>);
-
-        float curMeanX = vanPts.at(i).x;
-        float curMeanY = vanPts.at(i).y;
-
-        for (int j=0; j < curVanPts.size(); j++) {
-            Vec4i curVanPt = curVanPts[j];
-			circle(*imageDetails->getMat("vanished"), Point(curVanPt[2], curVanPt[3]),3, Scalar(0,255,0));
-            int curVanPtX = curVanPt[2];
-            int curVanPtY = curVanPt[3];
-
-			if (abs(curMeanX - curVanPtX) < validLineProx &&
-				abs(curMeanY - curVanPtY) < validLineProx) {
-
-				curGoodLines.at(i)->push_back((*imageDetails->getLineList("houghpResult"))[curVanPt[0]]);
-                curGoodLines.at(i)->push_back((*imageDetails->getLineList("houghpResult"))[curVanPt[1]]);
-            }
-        }
-    }
-
-	imageDetails->insertLineList("leftVanLines", curGoodLines.at(0));
-	imageDetails->insertLineList("rightVanLines", curGoodLines.at(1));
-}
-
-void LineFinder::trimLines(vector<Point> vanPts, string left, string right, string vert) {
+void LineFinder::trimLines(vector<Point> vanPts, string lineLists[]) {
 	vector<vector<Vec4i>> allVanLines;
 	vector<vector<Vec4i>*> curGoodLines;
 
-	allVanLines.push_back(*imageDetails->getLineList(left+"temp"));
-	allVanLines.push_back(*imageDetails->getLineList(right+"temp"));
+	allVanLines.push_back(*imageDetails->getLineList(lineLists[0]+"temp"));
+	allVanLines.push_back(*imageDetails->getLineList(lineLists[1]+"temp"));
 
     for (int i=0; i < allVanLines.size(); i++) {
         vector<Vec4i> curVanPts = allVanLines.at(i);
-		//vector<Vec4i> newVec;
 		curGoodLines.push_back(new vector<Vec4i>);
 
         float curMeanX = vanPts.at(i).x;
@@ -435,9 +313,17 @@ void LineFinder::trimLines(vector<Point> vanPts, string left, string right, stri
         }
     }
 
-	imageDetails->appendLineList(left, curGoodLines.at(0));
-	imageDetails->appendLineList(right, curGoodLines.at(1));
-	imageDetails->appendLineList(vert, imageDetails->getLineList("vertLinestemp"));
+	imageDetails->insertLineList(lineLists[0]+"temp", curGoodLines.at(0));
+	imageDetails->insertLineList(lineLists[1]+"temp", curGoodLines.at(1));
+
+	insertFinalLists(lineLists);
+}
+
+void LineFinder::insertFinalLists(string lineLists[]) {
+	for(int i = 0; i < 3; i++) {
+		imageDetails->appendLineList(lineLists[i], imageDetails->getLineList(lineLists[i]+"temp"));
+		imageDetails->removeLineList(lineLists[i]+"temp");
+	}
 }
 
 // cannyThresholdOneTrackbar - cannyThresh1

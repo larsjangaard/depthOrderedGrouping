@@ -48,15 +48,13 @@ class LineFinder {
 	static void goodLineProxTrackbar(int, void*);
 
 	static ImageDetails* imageDetails;
-
-	static void getLineDetails();
-	static void getLineDetails(string, string, string);
+	static void getLineDetails(string[]);
 
 	static Point findMeanVanPts(vector<Vec4i>*);
-	static Point findMeanVanPts(vector<Vec4i>*, string, string, string);
+	static void trimLines(vector<Point>, string[]);
 
-	static void trimLines(vector<Point>);
-	static void trimLines(vector<Point>, string, string, string);
+	static void insertLists(string[]);
+	static void insertFinalLists(string[]);
 	
     // Canny parameters
     static int cannyThresh1;
