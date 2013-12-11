@@ -16,6 +16,7 @@
 #include <string.h>
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
+#include <set>
 #include "imageDetails.h"
 
 using namespace cv;

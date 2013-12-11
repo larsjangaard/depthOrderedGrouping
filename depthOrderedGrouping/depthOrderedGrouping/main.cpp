@@ -4,7 +4,7 @@
 #include "imageDetails.h"
 #include "LineFinder.h"
 #include "QuadFinder.h"
-#include "QuadGrouper.h"
+//#include "QuadGrouper.h"
 #include "LineGrouping.h"
 
 using namespace cv;
@@ -51,6 +51,7 @@ int main(int argc, char *argv[]) {
 	for(int i = 0; i < retVec.size(); i++) {
 		cout << "VEC SIZE: " << retVec[i].size() << endl;
 	}
+
 	//QuadGrouper *quadGrouper = new QuadGrouper(&imageDetails);	
 	//QuadSorter *quadSorter = new QuadSOrter(&imageDetails);
 	cvWaitKey(0);
