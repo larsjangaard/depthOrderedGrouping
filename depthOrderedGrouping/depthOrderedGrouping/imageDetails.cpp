@@ -92,3 +92,7 @@ bool ImageDetails::lineListContains(string listName) {
 
 	return true;
 }
+
+void ImageDetails::removeLineList(string listName) {
+	LineLists.erase(listName);
+}
