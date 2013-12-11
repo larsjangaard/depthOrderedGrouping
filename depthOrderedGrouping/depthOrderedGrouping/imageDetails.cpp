@@ -72,3 +72,23 @@ vector<Point>* ImageDetails::insertPointList(string pointListName) {
 	PointLists[pointListName] = *(new vector<Point>);
 	return &PointLists[pointListName];
 }
+
+vector<Vec4i>* ImageDetails::appendLineList(string org, vector<Vec4i>* app) {
+	vector<Vec4i>* orgLineList = getLineList(org);
+
+	for(int i = 0; i < app->size(); i++) {
+		orgLineList->push_back(app->at(i));
+	}
+	
+	return orgLineList;
+}
+
+bool ImageDetails::lineListContains(string listName) {
+	map<string, vector<Vec4i>>::iterator it = LineLists.find(listName);
+
+	if(it == LineLists.end()) {
+		return false;
+	}
+
+	return true;
+}

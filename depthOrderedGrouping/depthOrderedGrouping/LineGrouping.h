@@ -3,6 +3,7 @@
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 #include <math.h>
+#include <float.h>
 #include "imageDetails.h"
 #include "LineFinder.h"
 #include <iostream>
