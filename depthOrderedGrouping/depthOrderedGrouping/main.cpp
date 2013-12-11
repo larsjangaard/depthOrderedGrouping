@@ -19,12 +19,6 @@ int main(int argc, char *argv[]) {
 	namedWindow("Original");
 	imshow("Original", *img);
 
-	vector<Vec4i> testVector;
-
-	imageDetails.insertLineList("testVector", &testVector);
-
-	vector<Vec4i>* returnVector = imageDetails.getLineList("testVector");
-
 	LineFinder lineFinder(&imageDetails);
 
 	lineFinder.greyImage();
@@ -37,12 +31,10 @@ int main(int argc, char *argv[]) {
 	cvWaitKey(0);
 
 	lineFinder.findValidLines(imageDetails.getLineList("houghpResult"), "leftVanLines", "rightVanLines", "vertLines");
-	//lineFinder.findValidLines();
 
 	cvWaitKey(0);
 
 	QuadFinder* quadFinder = new QuadFinder(&imageDetails);
-
 	vector<vector<Point>*>* vec = quadFinder->getQuads();
 
 	LineGrouping lineGrouping(&lineFinder, &imageDetails);
