@@ -38,6 +38,7 @@ class ImageDetails {
 	vector<Point>* insertPointList(string);
 
 	vector<Vec4i>* appendLineList(string, vector<Vec4i>*);
+	bool lineListContains(string);
   private:
 	void showImage(string, Mat);
 	

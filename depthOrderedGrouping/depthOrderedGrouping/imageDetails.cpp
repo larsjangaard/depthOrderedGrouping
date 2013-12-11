@@ -82,3 +82,13 @@ vector<Vec4i>* ImageDetails::appendLineList(string org, vector<Vec4i>* app) {
 	
 	return orgLineList;
 }
+
+bool ImageDetails::lineListContains(string listName) {
+	map<string, vector<Vec4i>>::iterator it = LineLists.find(listName);
+
+	if(it == LineLists.end()) {
+		return false;
+	}
+
+	return true;
+}

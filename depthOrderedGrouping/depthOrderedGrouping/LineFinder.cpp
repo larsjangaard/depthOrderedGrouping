@@ -176,8 +176,6 @@ void LineFinder::findValidLines(vector<Vec4i> *lineList, string left, string rig
 }
 
 void LineFinder::getLineDetails() {
-	//Mat *original = imageDetails->getMat("original");
-
 	imageDetails->insertLineList("vertLines");
 	imageDetails->insertLineList("leftVanLines");
 	imageDetails->insertLineList("rightVanLines");
@@ -239,19 +237,21 @@ void LineFinder::getLineDetails() {
 }
 
 void LineFinder::getLineDetails(string left, string right, string vert) {
-	//Mat *original = imageDetails->getMat("original");
-	// "vertLines"
-	// "leftVanLines"
-	// "rightVanLines"
-	//try {
-		//imageDetails->getLineList(left);
-		//imageDetails->getLineList(right);
-		//imageDetails->getLineList(vert);
-	//} catch (...) {
-		imageDetails->insertLineList(left);
-		imageDetails->insertLineList(right);
-		imageDetails->insertLineList(vert);
-	//}
+	string temp = "temp";
+	string leftTemp = left+temp;
+	string rightTemp = right+temp;
+	string vertTemp = vert+temp;
+
+	set<string, Vec4i> leftSet;
+	set<string, Vec4i> rightSet;
+	set<string, Vec4i> vertSet;
+
+	if(!imageDetails->lineListContains(leftTemp) 
+		&& !imageDetails->lineListContains(rightTemp) && !imageDetails->lineListContains(vertTemp)) {
+		imageDetails->insertLineList(leftTemp);
+		imageDetails->insertLineList(rightTemp);
+		imageDetails->insertLineList(vertTemp);
+	}
 
     // go thru all the houghline segments and get their coords/slopes/intercepts
 	for ( int i=0; i < imageDetails->getLineList("houghpResult")->size(); i++ ) {
@@ -263,7 +263,7 @@ void LineFinder::getLineDetails(string left, string right, string vert) {
 
         if (dx_i == 0) dx_i = .0001; // vertical
         mi = (dy_i / dx_i); // slope
-		if (abs(mi) > verticalThresh) imageDetails->getLineList(vert)->push_back(line_i); // this will go to 'goodLines' by default
+		if (abs(mi) > verticalThresh) imageDetails->getLineList(vertTemp)->push_back(line_i); // this will go to 'goodLines' by default
         else {
             ci = y1_i - (mi*x1_i); // intercept
 
@@ -278,7 +278,7 @@ void LineFinder::getLineDetails(string left, string right, string vert) {
 				mj = (dy_j / dx_j); // slope
 
 				if (abs(mj) > verticalThresh && j == imageDetails->getLineList("houghpResult")->size()-1)
-					imageDetails->getLineList(vert)->push_back(line_j);
+					imageDetails->getLineList(vertTemp)->push_back(line_j);
 				else {
 					cj = y1_j - (mj*x1_j);
 
@@ -300,8 +300,8 @@ void LineFinder::getLineDetails(string left, string right, string vert) {
 
 						// collect the good vanishing points
 						// CHANGE FOR FINAL
-						if (intxnX < 265 && intxnX > 0) imageDetails->getLineList(left)->push_back(curVanPt);
-						else if (intxnX > 650 && intxnX < imageDetails->getMat("original")->cols) imageDetails->getLineList(right)->push_back(curVanPt);
+						if (intxnX < 265 && intxnX > 0) imageDetails->getLineList(leftTemp)->push_back(curVanPt);
+						else if (intxnX > 650 && intxnX < imageDetails->getMat("original")->cols) imageDetails->getLineList(rightTemp)->push_back(curVanPt);
 					}
                 }
             }
@@ -377,14 +377,15 @@ void LineFinder::trimLines(vector<Point> vanPts) {
 }
 
 void LineFinder::trimLines(vector<Point> vanPts, string left, string right, string vert) {
-	vector<vector<Vec4i>*> allVanLines;
+	vector<vector<Vec4i>> allVanLines;
 	vector<vector<Vec4i>*> curGoodLines;
 
-	allVanLines.push_back(imageDetails->getLineList(left));
-	allVanLines.push_back(imageDetails->getLineList(right));
+	allVanLines.push_back(*imageDetails->getLineList(left));
+	allVanLines.push_back(*imageDetails->getLineList(right));
 
     for (int i=0; i < allVanLines.size(); i++) {
-        vector<Vec4i> curVanPts = *allVanLines.at(i);
+        vector<Vec4i> curVanPts = allVanLines.at(i);
+		//vector<Vec4i> newVec;
 		curGoodLines.push_back(new vector<Vec4i>);
 
         float curMeanX = vanPts.at(i).x;
@@ -405,8 +406,8 @@ void LineFinder::trimLines(vector<Point> vanPts, string left, string right, stri
         }
     }
 
-	imageDetails->appendLineList(left, curGoodLines.at(0));
-	imageDetails->appendLineList(right, curGoodLines.at(1));
+	imageDetails->insertLineList(left, curGoodLines.at(0));
+	imageDetails->insertLineList(right, curGoodLines.at(1));
 }
 
 // cannyThresholdOneTrackbar - cannyThresh1

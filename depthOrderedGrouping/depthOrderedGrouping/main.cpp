@@ -36,7 +36,8 @@ int main(int argc, char *argv[]) {
 
 	cvWaitKey(0);
 
-	lineFinder.findValidLines(imageDetails.getLineList("houghpResult"), "left", "right", "vert");
+	lineFinder.findValidLines(imageDetails.getLineList("houghpResult"), "leftVanLines", "rightVanLines", "vertLines");
+	//lineFinder.findValidLines();
 
 	cvWaitKey(0);
 
