@@ -173,12 +173,12 @@ vector<Point> QuadFinder::completeQuad(Vec4i ref, String refVanPt, Vec4i comp, S
 		newLine2 = Vec4i(inter.x, inter.y, rightFur.x, rightFur.y);
 	}
 
-	//line(*imageDetails->getMat("quad"), Point(leftLine[0], leftLine[1]), Point(leftLine[2], leftLine[3]), Scalar(255,0,0));
-	//line(*imageDetails->getMat("quad"), Point(rightLine[0], rightLine[1]), Point(rightLine[2], rightLine[3]), Scalar(0,255,0));
-	//line(*imageDetails->getMat("quad"), Point(newLine1[0], newLine1[1]), Point(newLine1[2], newLine1[3]), Scalar(255,0,0), 1);
-	//line(*imageDetails->getMat("quad"), Point(newLine2[0], newLine2[1]), Point(newLine2[2], newLine2[3]), Scalar(0,255,0), 1);
-	//line(*imageDetails->getMat("quad"), Point(ref[0], ref[1]), Point(ref[2], ref[3]), Scalar(0,0,255), 2);
-	//line(*imageDetails->getMat("quad"), Point(comp[0], comp[1]), Point(comp[2], comp[3]), Scalar(0,0,255), 2);
+	line(*imageDetails->getMat("quad"), Point(leftLine[0], leftLine[1]), Point(leftLine[2], leftLine[3]), Scalar(255,0,0));
+	line(*imageDetails->getMat("quad"), Point(rightLine[0], rightLine[1]), Point(rightLine[2], rightLine[3]), Scalar(0,255,0));
+	line(*imageDetails->getMat("quad"), Point(newLine1[0], newLine1[1]), Point(newLine1[2], newLine1[3]), Scalar(255,0,0), 1);
+	line(*imageDetails->getMat("quad"), Point(newLine2[0], newLine2[1]), Point(newLine2[2], newLine2[3]), Scalar(0,255,0), 1);
+	line(*imageDetails->getMat("quad"), Point(ref[0], ref[1]), Point(ref[2], ref[3]), Scalar(0,0,255), 2);
+	line(*imageDetails->getMat("quad"), Point(comp[0], comp[1]), Point(comp[2], comp[3]), Scalar(0,0,255), 2);
 
 	imshow("Quad", *imageDetails->getMat("quad"));
 
@@ -186,7 +186,7 @@ vector<Point> QuadFinder::completeQuad(Vec4i ref, String refVanPt, Vec4i comp, S
 
 	cout << "rcInter: " << rcInter << endl << endl;
 
-	//cvWaitKey();
+	cvWaitKey();
 
 	displayVec->push_back(newLine1);
 	displayVec->push_back(newLine2);
@@ -274,10 +274,10 @@ vector<Point> QuadFinder::findClosestPnt(Vec4i ref, Vec4i comp) {
 	vector<Point> l1, l2;
 	
 	l1.push_back(Point(ref[0], ref[1]));
-	l1.push_back(Point(ref[0], ref[1]));
+	l1.push_back(Point(ref[2], ref[3]));
 
-	l2.push_back(Point(ref[0], ref[1]));
-	l2.push_back(Point(ref[0], ref[1]));
+	l2.push_back(Point(comp[0], comp[1]));
+	l2.push_back(Point(comp[2], comp[3]));
 
 	double minDist = 100;
 
@@ -293,7 +293,7 @@ vector<Point> QuadFinder::findClosestPnt(Vec4i ref, Vec4i comp) {
 				minDist = dist;
 
 				minPnts[0] = l1.at(i);
-				minPnts[1] = l1.at(j);
+				minPnts[1] = l2.at(j);
 			}
 		}
 	}
