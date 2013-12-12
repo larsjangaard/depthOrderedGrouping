@@ -17,6 +17,10 @@ int main(int argc, char *argv[]) {
 	Mat* img = imageDetails.getMat("original");
 
 	namedWindow("Original");
+
+	//line(*imageDetails.getMat("original"), Point(467, 168), Point(481, 169), Scalar(255,0,0));
+	//line(*imageDetails.getMat("original"), Point(408, 192), Point(472,174), Scalar(0,255,0));
+
 	imshow("Original", *img);
 
 	LineFinder lineFinder(&imageDetails);
@@ -34,8 +38,28 @@ int main(int argc, char *argv[]) {
 
 	cvWaitKey(0);
 
+	cout << "Found " << imageDetails.getLineList("leftVanLines")->size() + imageDetails.getLineList("rightVanLines")->size()
+		+ imageDetails.getLineList("vertLines")->size() << " lines." << endl;
+
+	cout << "LeftVanLines: " << imageDetails.getLineList("leftVanLines")->size() << endl;
+	cout << "LeftVanLines: " << imageDetails.getLineList("rightVanLines")->size() << endl;
+	cout << "LeftVanLines: " << imageDetails.getLineList("vertLines")->size() << endl;
+
 	QuadFinder* quadFinder = new QuadFinder(&imageDetails);
-	vector<vector<Point>*>* vec = quadFinder->getQuads();
+	vector<vector<vector<Point>>>* vec = quadFinder->getQuads();
+
+	for(int i = 0; i < vec->size(); i++) {
+		for(int j = 0; j < vec->at(i).size(); j++) {
+			vector<Point> pnts = vec->at(i).at(j);
+				line(*imageDetails.getMat("original"), pnts.at(0), pnts.at(1), Scalar(0,255,0), 2);
+				line(*imageDetails.getMat("original"), pnts.at(1), pnts.at(2), Scalar(0,255,0), 2);
+				line(*imageDetails.getMat("original"), pnts.at(2), pnts.at(3), Scalar(0,255,0), 2);
+				line(*imageDetails.getMat("original"), pnts.at(0), pnts.at(3), Scalar(0,255,0), 2);
+		}
+	}
+
+	namedWindow("ALLQUADS");
+	imshow("ALLQUADS", *imageDetails.getMat("original"));
 
 	LineGrouping lineGrouping(&lineFinder, &imageDetails);
 	vector<vector<Vec4i>> retVec = lineGrouping.groupLines(*imageDetails.getMat("greyScale"));

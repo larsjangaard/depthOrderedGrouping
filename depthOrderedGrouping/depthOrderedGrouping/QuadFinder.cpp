@@ -4,12 +4,21 @@ QuadFinder::QuadFinder(ImageDetails* img) {
 	imageDetails = img;
 	quadCand = new vector<vector<Point>*>;
 	displayVec = new vector<Vec4i>;
+
+	//leftQuads = new vector<vector<Point>>;
+	//rightQuads = new vector<vector<Point>>;
+	//vertQuads = new vector<vector<Point>>;
 }
 
-vector<vector<Point>*>* QuadFinder::getQuads() {
+vector<vector<vector<Point>>>* QuadFinder::getQuads() {
 	findCloseLines();
 
-	return quadCand;
+	vector<vector<vector<Point>>>* quads = new vector<vector<vector<Point>>>;
+	quads->push_back(leftQuads);
+	quads->push_back(rightQuads);
+	quads->push_back(vertQuads);
+
+	return quads;
 }
 
 void QuadFinder::findCloseLines() {
@@ -25,13 +34,17 @@ void QuadFinder::findCloseLines() {
 	
 	vector<vector<Vec4i>*> *quadrilaterals = new vector<vector<Vec4i>*>;
 
+	int totalCount = 0;
+
 	for(int i = 0; i < vanLines.size()-1; i++) {
 		for(int j = i+1; j < vanLines.size(); j++) {
+			cout << "I: " << i << " - J: " << j << endl;
 			for(int ref = 0; ref < vanLines[i].size(); ref++) {
 				for(int comp = 0; comp < vanLines[j].size() && ref < vanLines[i].size(); comp++) {
+					//cout << "(" << ref << "," << comp << ")";
+					totalCount++;
 					if(closeEnough(vanLines[i].at(ref), vanLines[j].at(comp))) {
-
-						cout << "RefLine: " << vanLines[i].at(ref) << " :: CompLine: " << vanLines[i].at(comp) << endl;
+						cout << "RefLine: " << vanLines[i].at(ref) << " :: CompLine: " << vanLines[j].at(comp) << endl;
 						cout << "-----------------------------------------" << endl;
 
 						String refString, compString;
@@ -39,17 +52,34 @@ void QuadFinder::findCloseLines() {
 						i == 0 ? refString = leftVanLines : refString = rightVanLines;
 						j == 1 ? compString = rightVanLines : compString = vertLines;
 
-						quadCand->push_back(&completeQuad(vanLines[i].at(ref), refString, vanLines[j].at(comp), compString));
+
+
+						//vector<vector<Point>> leftQuads;
+						//vector<vector<Point>> rightQuads;
+						//vector<vector<Point>> vertQuads;
+
+						if(refString == leftVanLines && compString == rightVanLines) {
+							vector<Point> vec = completeQuad(vanLines[i].at(ref), refString, vanLines[j].at(comp), compString);
+							vertQuads.push_back(vec);
+						} else if(refString == leftVanLines && compString == vertLines) {
+							rightQuads.push_back(completeQuad(vanLines[i].at(ref), refString, vanLines[j].at(comp), compString));
+						}  else {
+							leftQuads.push_back(completeQuad(vanLines[i].at(ref), refString, vanLines[j].at(comp), compString));
+						}
+						
+						//quadCand->push_back(&completeQuad(vanLines[i].at(ref), refString, vanLines[j].at(comp), compString));
 
 						vanLines[i].at(ref) = Vec4i(-1, -1, -1, -1);
 						vanLines[j].at(comp) = Vec4i(-1, -1, -1, -1);
+
+						ref++;
 					}
 				}
 			}
 		}
 	}
 
-
+	//cout << "LinesCompared: " << totalCount << endl;
 	for(int i = 0; i < displayVec->size(); i++) {
 		for(int j = 0; j < displayVec->size(); j++) {
 			Vec4i newLine1 = displayVec->at(i);
@@ -67,7 +97,7 @@ void QuadFinder::findCloseLines() {
 }
 
 bool QuadFinder::closeEnough(Vec4i ref, Vec4i comp) {
-	if(ref == comp) return false;
+	if(ref == comp || comp == Vec4i(-1, -1, -1, -1) || ref == Vec4i(-1, -1, -1, -1)) return false;
 
 	double refCompP1P1 = lineDist(Vec4i(ref[0], ref[1], comp[0], comp[1]));
 	double refCompP1P2 = lineDist(Vec4i(ref[0], ref[1], comp[2], comp[3]));
@@ -92,7 +122,7 @@ vector<Point> QuadFinder::completeQuad(Vec4i ref, String refVanPt, Vec4i comp, S
 	//vector<Point> closePnts = findClosestPnt(ref, comp);
 	Point inter;
 
-	//cout << "CloseRef: " << closePnts[0] << " :: CloseComp: " << closePnts[1] << endl;
+	cout << "Ref: " << ref << " :: Comp: " << comp << endl;
 	cout << "FurRef:   " << furPnts[0] << " :: FurComp: " << furPnts[1] << endl;
 
 	if(compVanPt == "vertLines") {
@@ -145,10 +175,10 @@ vector<Point> QuadFinder::completeQuad(Vec4i ref, String refVanPt, Vec4i comp, S
 
 	//line(*imageDetails->getMat("quad"), Point(leftLine[0], leftLine[1]), Point(leftLine[2], leftLine[3]), Scalar(255,0,0));
 	//line(*imageDetails->getMat("quad"), Point(rightLine[0], rightLine[1]), Point(rightLine[2], rightLine[3]), Scalar(0,255,0));
-	line(*imageDetails->getMat("quad"), Point(newLine1[0], newLine1[1]), Point(newLine1[2], newLine1[3]), Scalar(255,0,0), 1);
-	line(*imageDetails->getMat("quad"), Point(newLine2[0], newLine2[1]), Point(newLine2[2], newLine2[3]), Scalar(0,255,0), 1);
-	line(*imageDetails->getMat("quad"), Point(ref[0], ref[1]), Point(ref[2], ref[3]), Scalar(0,0,255), 2);
-	line(*imageDetails->getMat("quad"), Point(comp[0], comp[1]), Point(comp[2], comp[3]), Scalar(0,0,255), 2);
+	//line(*imageDetails->getMat("quad"), Point(newLine1[0], newLine1[1]), Point(newLine1[2], newLine1[3]), Scalar(255,0,0), 1);
+	//line(*imageDetails->getMat("quad"), Point(newLine2[0], newLine2[1]), Point(newLine2[2], newLine2[3]), Scalar(0,255,0), 1);
+	//line(*imageDetails->getMat("quad"), Point(ref[0], ref[1]), Point(ref[2], ref[3]), Scalar(0,0,255), 2);
+	//line(*imageDetails->getMat("quad"), Point(comp[0], comp[1]), Point(comp[2], comp[3]), Scalar(0,0,255), 2);
 
 	imshow("Quad", *imageDetails->getMat("quad"));
 
@@ -166,8 +196,30 @@ vector<Point> QuadFinder::completeQuad(Vec4i ref, String refVanPt, Vec4i comp, S
 	vector<Point> quads;
 	quads.push_back(rcInter);
 	quads.push_back(furPnts[0]);
-	quads.push_back(furPnts[1]);
 	quads.push_back(inter);
+	quads.push_back(furPnts[1]);
+
+	/*cout << "P0: " << rcInter << " P1: " << furPnts[0] << endl;
+	line(*imageDetails->getMat("quad"), rcInter, furPnts[0], Scalar(0,255,0), 2);
+	imshow("Quad", *imageDetails->getMat("quad"));
+	cvWaitKey();
+
+	cout << " P1: " << furPnts[0] << " P2: " << inter << endl;
+	line(*imageDetails->getMat("quad"), furPnts[0], inter, Scalar(0,255,0), 2);
+	imshow("Quad", *imageDetails->getMat("quad"));
+	cvWaitKey();
+
+	cout << " P2: " << furPnts[1] << " P3: " << inter << endl;
+	line(*imageDetails->getMat("quad"), furPnts[1], inter, Scalar(0,255,0), 2);
+	imshow("Quad", *imageDetails->getMat("quad"));
+	cvWaitKey();
+
+	line(*imageDetails->getMat("quad"), rcInter, furPnts[1], Scalar(0,255,0), 2);
+	cout << "P3: " << rcInter << " P0: " << furPnts[1] << endl;
+	imshow("Quad", *imageDetails->getMat("quad"));
+	cvWaitKey();*/
+
+	imshow("Quad", *imageDetails->getMat("quad"));
 
 	return quads;
 }
@@ -219,9 +271,164 @@ vector<Point> QuadFinder::findClosestPnt(Vec4i ref, Vec4i comp) {
 	double compS = getLineSlope(comp);
 	double compB = getLineIntercept(comp, compS);
 
-	int Rx, Ry, Cy, Cx, rMax, cMaxX, cMaxY;
+	int Rx, Ry, Cy, Cx, rMaxX, rMaxY, cMaxX, cMaxY;
 
-	if(ref[0] < ref[2]) {
+	double minDist = 100;
+	vector<Point> minPnts;
+	minPnts.push_back(Point(0,0));
+	minPnts.push_back(Point(0,0));
+
+	if(refS == 0 && compS == 0) {
+		if(ref[0] < ref[2]) {
+			Rx = ref[0];
+			rMaxX = ref[2];
+		} else {
+			Rx = ref[2];
+			rMaxX = ref[0];
+		}
+
+		if(comp[0] < comp[2]) {
+			Cy = comp[0];
+			cMaxY = comp[2];
+		} else {
+			Cy = comp[2];
+			cMaxY = comp[0];
+		}
+
+		Ry = ref[1];
+		Cx = comp[0];
+
+		for(Rx; Rx < rMaxX; Rx++) {
+			for(Cy; Cy < cMaxY; Cy) {
+				double dist = lineDist(Vec4i(Rx, Ry, Cx, Cy));
+
+				if(dist < minDist) {
+					minDist = dist;
+					minPnts[0] = Point(Rx, Ry);
+					minPnts[1] = Point(Cx, Cy);
+				}
+			}
+		}
+	} else if(refS == 0) {
+		if(ref[0] < ref[2]) {
+			Rx = ref[0];
+			rMaxX = ref[2];
+		} else {
+			Rx = ref[2];
+			rMaxX = ref[0];
+		}
+
+		if(comp[0] < comp[2]) {
+			Cx = comp[0];
+			cMaxX = comp[2];
+		} else {
+			Cx = comp[2];
+			cMaxX = comp[0];
+		}
+
+		/*if(comp[1] < comp[3]) {
+			Cy = comp[1];
+			cMaxY = comp[3];
+		} else {
+			Cy = comp[3];
+			cMaxY = comp[1];
+		}*/
+
+		Ry = ref[1];
+
+		for(Rx; Rx < rMaxX; Rx++) {
+			for(Cx; Cx < cMaxX; Cx++) {
+				Cy = (compS * Cx) + compB;
+
+				double dist = lineDist(Vec4i(Rx, Ry, Cx, Cy));
+
+				if(dist < minDist) {
+					minDist = dist;
+					minPnts[0] = Point(Rx, Ry);
+					minPnts[1] = Point(Cx, Cy);
+				}
+			}
+		}
+	} else if(compS == 0) {
+		if(ref[0] < ref[2]) {
+			Rx = ref[0];
+			rMaxX = ref[2];
+		} else {
+			Rx = ref[2];
+			rMaxX = ref[0];
+		}
+
+		if(ref[1] < ref[3]) {
+			Ry = ref[1];
+			rMaxY = ref[3];
+		} else {
+			Ry = ref[3];
+			rMaxY = ref[1];
+		}
+
+		if(comp[1] < comp[3]) {
+			Cy = comp[1];
+			cMaxY = comp[3];
+		} else {
+			Cy = comp[3];
+			cMaxY = comp[1];
+		}
+
+		Cx = comp[0];
+
+		for(Rx; Rx < rMaxX; Rx++) {
+			Ry = (refS * Rx) + refB;
+			
+			for(Cy; Cy < cMaxY; Cy++) {
+
+				double dist = lineDist(Vec4i(Rx, Ry, Cx, Cy));
+
+				if(dist < minDist) {
+					minDist = dist;
+					minPnts[0] = Point(Rx, Ry);
+					minPnts[1] = Point(Cx, Cy);
+				}
+			}
+		}
+	} else {
+
+		if(ref[0] < ref[2]) {
+			Rx = ref[0];
+			rMaxX = ref[2];
+		} else {
+			Rx = ref[2];
+			rMaxX = ref[0];
+		}
+
+		if(comp[0] < comp[2]) {
+			Cx = comp[0];
+			cMaxX = comp[2];
+		} else {
+			Cx = comp[2];
+			cMaxX = comp[0];
+		}
+
+		for(Rx; Rx < rMaxX; Rx++) {
+			Ry = (refS * Rx) + refB;			
+			
+			for(int cx = Cx; cx < cMaxX; cx++) {
+				Cy = (compS * Cx) + compB;
+				double dist = lineDist(Vec4i(Rx, Ry, cx, Cy));
+
+				if(dist < minDist) {
+					minDist = dist;
+					minPnts[0] = Point(Rx, Ry);
+					minPnts[1] = Point(cx, Cy);
+				}
+			}
+		}
+	}
+
+	//double minDist = 100;
+
+	//for
+
+	/*if(ref[0] < ref[2]) {
 		rMax = ref[2];
 		Rx = ref[0];
 		Ry = ref[1];
@@ -241,9 +448,9 @@ vector<Point> QuadFinder::findClosestPnt(Vec4i ref, Vec4i comp) {
 		cMaxX = comp[1];
 		Cx = comp[2];
 		Cy = comp[3];
-	}
+	}*/
 
-	double minDist = 100;
+	/*double minDist = 100;
 	vector<Point> minPnts;
 	minPnts.push_back(Point(0,0));
 	minPnts.push_back(Point(0,0));
@@ -256,7 +463,13 @@ vector<Point> QuadFinder::findClosestPnt(Vec4i ref, Vec4i comp) {
 	for(Rx; Rx < rMax; Rx++) {
 		Ry = (refS * Rx) + refB;
 
-		if(compS == 0.0000 || compS == 0.0000) {
+		if(refS == 0 && compS == 0) {
+			ref[0] < ref[2] ? Ry = ref[0] : Ry = comp[2];
+
+			for(int cy = Cy; cy < cMaxY; cy++) {
+
+			}
+		} else if(compS == 0) {
 			comp[1] < comp[3] ? Cy = comp[1] : Cy = comp[3];
 
 			for(int cy = Cy; cy < cMaxY; cy++) {
@@ -268,6 +481,18 @@ vector<Point> QuadFinder::findClosestPnt(Vec4i ref, Vec4i comp) {
 					minPnts[1] = Point(Cx, cy);
 				}
 			}
+		} else if(refS == 0) {
+			ref[0] < ref[2] ? Ry = ref[0] : Ry = comp[2];
+
+			for(int ry = Ry; ry < rMax; ry++) {
+				double dist = lineDist(Vec4i(Rx, ry, Cx, Cy));
+
+				if( dist < minDist ) {
+					minDist = dist;
+					minPnts[0] = Point(Rx, ry);
+					minPnts[1] = Point(Cx, Cy);
+				}
+			}			
 		} else {
 			for(int cx = Cx; cx < cMaxX; cx++) {
 				Cy = (compS * cx) + compB;
@@ -281,7 +506,7 @@ vector<Point> QuadFinder::findClosestPnt(Vec4i ref, Vec4i comp) {
 				}
 			}
 		}
-	}
+	}*/
 
 	if(minPnts[0] != Point(ref[0], ref[1]) || minPnts[0] != Point(ref[2], ref[3])) {
 		int refD1 = lineDist(Vec4i(ref[0], ref[1], minPnts[0].x, minPnts[0].y));

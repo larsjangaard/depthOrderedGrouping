@@ -17,7 +17,7 @@ class QuadFinder
 {
 	public:
 		QuadFinder(ImageDetails*);
-		vector<vector<Point>*>* getQuads();
+		vector<vector<vector<Point>>>* getQuads();
 	
 	private:
 		void findCloseLines();
@@ -36,6 +36,10 @@ class QuadFinder
 		vector<vector<Point>*>* quadCand;
 		vector<Vec4i>* displayVec;
 		vector<Point> findClosestPnt(Vec4i, Vec4i);
+
+		vector<vector<Point>> leftQuads;
+		vector<vector<Point>> rightQuads;
+		vector<vector<Point>> vertQuads;
 
 		double lineDist(Vec4i);
 };
