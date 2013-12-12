@@ -100,7 +100,7 @@ double LineGrouping::calcParallelism(int distance, double angleDiff, double over
 {
   double x, p1 = 2 * pow( 3.0, 2.0), p2 = 2 * pow( 0.1, 2.0), p3 = 2 * pow( 0.1, 2.0);
 
-  distance = pow( distance, 2);
+  distance = pow( distance, 2.0);
 
   x = ( -( distance / p1 ) - ( pow( ( 1 - overlappingRatio ), 2) / p2) - ( ( 1 - angleDiff ) / p3 ) );
   
@@ -117,7 +117,7 @@ double LineGrouping::calcOrthogonality(int distance,double angleDiff)
 
   double x, o1 = 2 * pow( 2.0, 2.0), o2 = 2 * pow( 0.3, 2.0);
 
-  distance = pow( distance, 2);
+  distance = pow( distance, 2.0);
 
   x = ( -( distance / o1) - ( angleDiff / o2) );
 
@@ -567,7 +567,7 @@ vector<vector<Vec4i>> LineGrouping:: groupLines(Mat image)
 	  //where each eigenvector is added to a new column
 	  //of the lambda matrix
 	  lambda.at<float>(n,m) = (float)eigenVec.at<double>(n,m);
-	  float val =pow(lambda.at<float>(n,m), 2.0);
+	  float val =pow((double)lambda.at<float>(n,m), 2.0);
 	  sumColumn.at<float>(n) =+ val;
 	  }
   }
@@ -578,8 +578,7 @@ vector<vector<Vec4i>> LineGrouping:: groupLines(Mat image)
   {
 	  for (int q = 0; q < clusters; q++)
 	  {
- 
-	  nLambda.at<float>(p,q) = lambda.at<float>(p,q) / pow(sumColumn.at<float>(p), 0.5);
+		  nLambda.at<float>(p,q) = lambda.at<float>(p,q) / pow((double)sumColumn.at<float>(p), 0.5);
 	  }
 	  	  
   }

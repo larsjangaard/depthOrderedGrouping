@@ -271,255 +271,31 @@ vector<Point> QuadFinder::findClosestPnt(Vec4i ref, Vec4i comp) {
 	double compS = getLineSlope(comp);
 	double compB = getLineIntercept(comp, compS);
 
-	int Rx, Ry, Cy, Cx, rMaxX, rMaxY, cMaxX, cMaxY;
+	vector<Point> l1, l2;
+	
+	l1.push_back(Point(ref[0], ref[1]));
+	l1.push_back(Point(ref[0], ref[1]));
+
+	l2.push_back(Point(ref[0], ref[1]));
+	l2.push_back(Point(ref[0], ref[1]));
 
 	double minDist = 100;
+
 	vector<Point> minPnts;
 	minPnts.push_back(Point(0,0));
 	minPnts.push_back(Point(0,0));
 
-	if(refS == 0 && compS == 0) {
-		if(ref[0] < ref[2]) {
-			Rx = ref[0];
-			rMaxX = ref[2];
-		} else {
-			Rx = ref[2];
-			rMaxX = ref[0];
-		}
+	for(int i = 0; i < l1.size(); i++) {
+		for(int j = 0; j < l2.size(); j++) {
+			double dist = lineDist(Vec4i(l1.at(i).x, l1.at(i).y, l2.at(j).x, l2.at(j).y));
 
-		if(comp[0] < comp[2]) {
-			Cy = comp[0];
-			cMaxY = comp[2];
-		} else {
-			Cy = comp[2];
-			cMaxY = comp[0];
-		}
+			if(dist < minDist) {
+				minDist = dist;
 
-		Ry = ref[1];
-		Cx = comp[0];
-
-		for(Rx; Rx < rMaxX; Rx++) {
-			for(Cy; Cy < cMaxY; Cy) {
-				double dist = lineDist(Vec4i(Rx, Ry, Cx, Cy));
-
-				if(dist < minDist) {
-					minDist = dist;
-					minPnts[0] = Point(Rx, Ry);
-					minPnts[1] = Point(Cx, Cy);
-				}
+				minPnts[0] = l1.at(i);
+				minPnts[1] = l1.at(j);
 			}
 		}
-	} else if(refS == 0) {
-		if(ref[0] < ref[2]) {
-			Rx = ref[0];
-			rMaxX = ref[2];
-		} else {
-			Rx = ref[2];
-			rMaxX = ref[0];
-		}
-
-		if(comp[0] < comp[2]) {
-			Cx = comp[0];
-			cMaxX = comp[2];
-		} else {
-			Cx = comp[2];
-			cMaxX = comp[0];
-		}
-
-		/*if(comp[1] < comp[3]) {
-			Cy = comp[1];
-			cMaxY = comp[3];
-		} else {
-			Cy = comp[3];
-			cMaxY = comp[1];
-		}*/
-
-		Ry = ref[1];
-
-		for(Rx; Rx < rMaxX; Rx++) {
-			for(Cx; Cx < cMaxX; Cx++) {
-				Cy = (compS * Cx) + compB;
-
-				double dist = lineDist(Vec4i(Rx, Ry, Cx, Cy));
-
-				if(dist < minDist) {
-					minDist = dist;
-					minPnts[0] = Point(Rx, Ry);
-					minPnts[1] = Point(Cx, Cy);
-				}
-			}
-		}
-	} else if(compS == 0) {
-		if(ref[0] < ref[2]) {
-			Rx = ref[0];
-			rMaxX = ref[2];
-		} else {
-			Rx = ref[2];
-			rMaxX = ref[0];
-		}
-
-		if(ref[1] < ref[3]) {
-			Ry = ref[1];
-			rMaxY = ref[3];
-		} else {
-			Ry = ref[3];
-			rMaxY = ref[1];
-		}
-
-		if(comp[1] < comp[3]) {
-			Cy = comp[1];
-			cMaxY = comp[3];
-		} else {
-			Cy = comp[3];
-			cMaxY = comp[1];
-		}
-
-		Cx = comp[0];
-
-		for(Rx; Rx < rMaxX; Rx++) {
-			Ry = (refS * Rx) + refB;
-			
-			for(Cy; Cy < cMaxY; Cy++) {
-
-				double dist = lineDist(Vec4i(Rx, Ry, Cx, Cy));
-
-				if(dist < minDist) {
-					minDist = dist;
-					minPnts[0] = Point(Rx, Ry);
-					minPnts[1] = Point(Cx, Cy);
-				}
-			}
-		}
-	} else {
-
-		if(ref[0] < ref[2]) {
-			Rx = ref[0];
-			rMaxX = ref[2];
-		} else {
-			Rx = ref[2];
-			rMaxX = ref[0];
-		}
-
-		if(comp[0] < comp[2]) {
-			Cx = comp[0];
-			cMaxX = comp[2];
-		} else {
-			Cx = comp[2];
-			cMaxX = comp[0];
-		}
-
-		for(Rx; Rx < rMaxX; Rx++) {
-			Ry = (refS * Rx) + refB;			
-			
-			for(int cx = Cx; cx < cMaxX; cx++) {
-				Cy = (compS * Cx) + compB;
-				double dist = lineDist(Vec4i(Rx, Ry, cx, Cy));
-
-				if(dist < minDist) {
-					minDist = dist;
-					minPnts[0] = Point(Rx, Ry);
-					minPnts[1] = Point(cx, Cy);
-				}
-			}
-		}
-	}
-
-	//double minDist = 100;
-
-	//for
-
-	/*if(ref[0] < ref[2]) {
-		rMax = ref[2];
-		Rx = ref[0];
-		Ry = ref[1];
-	} else {
-		rMax = ref[0];
-		Rx = ref[2];
-		Ry = ref[3];
-	}
-
-	if(comp[0] < comp[2]) {
-		cMaxX = comp[2];
-		cMaxY = comp[3];
-		Cx = comp[0];
-		Cy = ref[1];
-	} else {
-		cMaxY = comp[0];
-		cMaxX = comp[1];
-		Cx = comp[2];
-		Cy = comp[3];
-	}*/
-
-	/*double minDist = 100;
-	vector<Point> minPnts;
-	minPnts.push_back(Point(0,0));
-	minPnts.push_back(Point(0,0));
-
-	cout << "y = " << refS << "x + " << refB<< endl;
-	cout << "y = " << compS << "x + " << compB << endl;
-
-	Cy -= 1;
-
-	for(Rx; Rx < rMax; Rx++) {
-		Ry = (refS * Rx) + refB;
-
-		if(refS == 0 && compS == 0) {
-			ref[0] < ref[2] ? Ry = ref[0] : Ry = comp[2];
-
-			for(int cy = Cy; cy < cMaxY; cy++) {
-
-			}
-		} else if(compS == 0) {
-			comp[1] < comp[3] ? Cy = comp[1] : Cy = comp[3];
-
-			for(int cy = Cy; cy < cMaxY; cy++) {
-				double dist = lineDist(Vec4i(Rx, Ry, Cx, cy));
-
-				if( dist < minDist ) {
-					minDist = dist;
-					minPnts[0] = Point(Rx, Ry);
-					minPnts[1] = Point(Cx, cy);
-				}
-			}
-		} else if(refS == 0) {
-			ref[0] < ref[2] ? Ry = ref[0] : Ry = comp[2];
-
-			for(int ry = Ry; ry < rMax; ry++) {
-				double dist = lineDist(Vec4i(Rx, ry, Cx, Cy));
-
-				if( dist < minDist ) {
-					minDist = dist;
-					minPnts[0] = Point(Rx, ry);
-					minPnts[1] = Point(Cx, Cy);
-				}
-			}			
-		} else {
-			for(int cx = Cx; cx < cMaxX; cx++) {
-				Cy = (compS * cx) + compB;
-
-				double dist = lineDist(Vec4i(Rx, Ry, cx, Cy));
-
-				if( dist < minDist ) {
-					minDist = dist;
-					minPnts[0] = Point(Rx, Ry);
-					minPnts[1] = Point(cx, Cy);
-				}
-			}
-		}
-	}*/
-
-	if(minPnts[0] != Point(ref[0], ref[1]) || minPnts[0] != Point(ref[2], ref[3])) {
-		int refD1 = lineDist(Vec4i(ref[0], ref[1], minPnts[0].x, minPnts[0].y));
-		int refD2 = lineDist(Vec4i(ref[2], ref[3], minPnts[0].x, minPnts[0].y));
-
-		refD1 < refD2 ? minPnts[0] = Point(ref[0], ref[1]) : minPnts[0] = Point(ref[2], ref[3]);
-	}
-
-	if(minPnts[1] != Point(comp[0], comp[1]) || minPnts[1] != Point(comp[2], comp[3])) {
-		int compD1 = lineDist(Vec4i(comp[0], comp[1], minPnts[1].x, minPnts[1].y));
-		int compD2 = lineDist(Vec4i(comp[2], comp[3], minPnts[1].x, minPnts[1].y));
-
-		compD1 < compD2 ? minPnts[1] = Point(comp[0], comp[1]) : minPnts[1] = Point(comp[2], comp[3]);
 	}
 
 	cout << "CloseRef: " << minPnts[0] << " :: CloseComp: " << minPnts[1] << endl;
