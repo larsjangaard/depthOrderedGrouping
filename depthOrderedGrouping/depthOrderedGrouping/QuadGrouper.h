@@ -36,6 +36,8 @@ private:
 	float getArea(vector<Point>);
 	float getIntxnArea(vector<Point>, vector<Point>, vector<Point>);
 	vector<Point> combineQuads(vector<Point>, vector<Point>);
+	vector<Point> combineVertQuads(vector<Point>, vector<Point>);
+	Point getIntxnPts(Point A1, Point A2, Point B1, Point B2);
 	void drawQuads();
 	void drawQuadsHelper(Mat &, vector<vector<Point>>, Scalar_<double>);
 };
