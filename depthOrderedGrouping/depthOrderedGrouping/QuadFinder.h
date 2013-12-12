@@ -36,6 +36,7 @@ class QuadFinder
 
 		double lineDist(Vec4i);
 		vector<Point> findClosestPnt(Vec4i, Vec4i);
+		Point findIntercepts(Point, double, Point, double);
 
 		vector<vector<Point>> leftQuads;
 		vector<vector<Point>> rightQuads;
