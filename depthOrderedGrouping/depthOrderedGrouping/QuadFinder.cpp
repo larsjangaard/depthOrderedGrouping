@@ -3,7 +3,9 @@
 QuadFinder::QuadFinder(ImageDetails* img) {
 	imageDetails = img;
 	quadCand = new vector<vector<Point>*>;
-	displayVec = new vector<Vec4i>;
+
+	displayQuadMat = imageDetails->getMat("original")->clone();
+	displayQuadsMat = imageDetails->getMat("original")->clone();
 }
 
 // QuadFinder::getQuads()
@@ -22,12 +24,12 @@ QuadFinder::QuadFinder(ImageDetails* img) {
 //        Line1 = Vec4i(P(2).x, P(2).y, P(3).x, P(3).y);
 //        Line1 = Vec4i(P(3).x, P(3).y, P(0).x, P(0).y);
 //
-//
 vector<vector<vector<Point>>>* QuadFinder::getQuads() {
 	findCloseLines();
 
 	// insert vectors into return vector.
 	vector<vector<vector<Point>>>* quads = new vector<vector<vector<Point>>>;
+
 	quads->push_back(leftQuads);
 	quads->push_back(rightQuads);
 	quads->push_back(vertQuads);
@@ -52,10 +54,8 @@ void QuadFinder::findCloseLines() {
 
 	for(int i = 0; i < vanLines.size()-1; i++) {
 		for(int j = i+1; j < vanLines.size(); j++) {
-			cout << "I: " << i << " - J: " << j << endl;
 			for(int ref = 0; ref < vanLines[i].size(); ref++) {
 				for(int comp = 0; comp < vanLines[j].size() && ref < vanLines[i].size(); comp++) {
-					//cout << "(" << ref << "," << comp << ")";
 					totalCount++;
 					if(closeEnough(vanLines[i].at(ref), vanLines[j].at(comp))) {
 						cout << "RefLine: " << vanLines[i].at(ref) << " :: CompLine: " << vanLines[j].at(comp) << endl;
@@ -85,21 +85,7 @@ void QuadFinder::findCloseLines() {
 		}
 	}
 
-	//cout << "LinesCompared: " << totalCount << endl;
-	for(int i = 0; i < displayVec->size(); i++) {
-		for(int j = 0; j < displayVec->size(); j++) {
-			Vec4i newLine1 = displayVec->at(i);
-
-			line(*imageDetails->getMat("quad"), Point(newLine1[0], newLine1[1]), Point(newLine1[2], newLine1[3]), Scalar(0,255,0), 2);
-			//line(*imageDetails->getMat("quad"), Point(newLine2[0], newLine2[1]), Point(newLine2[2], newLine2[3]), Scalar(0,255,0), 2);
-			//line(*imageDetails->getMat("quad"), Point(ref[0], ref[1]), Point(ref[2], ref[3]), Scalar(0,255,0), 2);
-			//line(*imageDetails->getMat("quad"), Point(comp[0], comp[1]), Point(comp[2], comp[3]), Scalar(0,255,0), 2);
-		}
-	}
-
-	imshow("All Quads", *imageDetails->getMat("quad"));
-
-	cvWaitKey();
+	cout << "LinesCompared: " << totalCount << endl;
 }
 
 bool QuadFinder::closeEnough(Vec4i ref, Vec4i comp) {
@@ -117,6 +103,39 @@ bool QuadFinder::closeEnough(Vec4i ref, Vec4i comp) {
 	return false;
 }
 
+// QuadFinder::displayQuad
+// 
+// Preconditions: none.
+// Postconditions: the vector of points representing a quadrilateral is displayed.
+//
+void QuadFinder::displayQuad(string windowName, vector<Point> quadPnts, Mat displayQuadMat) {
+	for(int i = 0; i < quadPnts.size(); i++) {
+		line(displayQuadMat, quadPnts[i], quadPnts[(i+1)%quadPnts.size()], Scalar(0,255,0), 2);
+	}
+
+	imshow(windowName, displayQuadMat);
+}
+
+// QuadFinder::displayQuads
+// 
+// Preconditions: none.
+// Postconditions: all quadrilaterals in the vector are displayed.
+//
+void QuadFinder::displayQuads(string windowName, vector<vector<Point>> quads) {
+	for(int i = 0; i < quads.size(); i++) {
+		displayQuad(windowName, quads[i], displayQuadsMat);
+	}
+
+	imshow(windowName, displayQuadsMat);
+}
+
+// QuadFinder::completeQuad
+//
+// Preconditions: "vanPts" point list exists in imageDetails. Two lines, ref and comp, that are
+//                close in proximity have been identified.
+//
+// Postconditions: a completed quadrilateral has been formed and pushed to the respective vector.
+//
 vector<Point> QuadFinder::completeQuad(Vec4i ref, String refVanPt, Vec4i comp, String compVanPt) {
 	vector<Point> *vanPts = imageDetails->getPointList("vanPts");
 	imageDetails->insertMat("quad", (*imageDetails->getMat("original")).clone());
@@ -156,16 +175,6 @@ vector<Point> QuadFinder::completeQuad(Vec4i ref, String refVanPt, Vec4i comp, S
 
 		newLine1 = Vec4i(inter.x, inter.y, leftFur.x, leftFur.y);
 		newLine2 = Vec4i(inter.x, inter.y, rightFur.x, rightFur.y);
-
-	/*line(*imageDetails->getMat("quad"), Point(leftLine[0], leftLine[1]), Point(leftLine[2], leftLine[3]), Scalar(255,0,0));
-	line(*imageDetails->getMat("quad"), Point(rightLine[0], rightLine[1]), Point(rightLine[2], rightLine[3]), Scalar(0,255,0));
-	line(*imageDetails->getMat("quad"), Point(newLine1[0], newLine1[1]), Point(newLine1[2], newLine1[3]), Scalar(0,255,0));
-	line(*imageDetails->getMat("quad"), Point(newLine2[0], newLine2[1]), Point(newLine2[2], newLine2[3]), Scalar(255,0,0));
-	line(*imageDetails->getMat("quad"), Point(ref[0], ref[1]), Point(ref[2], ref[3]), Scalar(0,0,255));
-	line(*imageDetails->getMat("quad"), Point(comp[0], comp[1]), Point(comp[2], comp[3]), Scalar(0,0,255));
-
-	imshow("Quad", *imageDetails->getMat("quad"));
-	cvWaitKey();*/
 	} else {
 		leftFur = furPnts[1];
 		leftLine = createNewLine(leftFur, vanPts->at(0));
@@ -179,25 +188,9 @@ vector<Point> QuadFinder::completeQuad(Vec4i ref, String refVanPt, Vec4i comp, S
 		newLine2 = Vec4i(inter.x, inter.y, rightFur.x, rightFur.y);
 	}
 
-	line(*imageDetails->getMat("quad"), Point(leftLine[0], leftLine[1]), Point(leftLine[2], leftLine[3]), Scalar(255,0,0));
-	line(*imageDetails->getMat("quad"), Point(rightLine[0], rightLine[1]), Point(rightLine[2], rightLine[3]), Scalar(0,255,0));
-	line(*imageDetails->getMat("quad"), Point(newLine1[0], newLine1[1]), Point(newLine1[2], newLine1[3]), Scalar(255,0,0), 1);
-	line(*imageDetails->getMat("quad"), Point(newLine2[0], newLine2[1]), Point(newLine2[2], newLine2[3]), Scalar(0,255,0), 1);
-	line(*imageDetails->getMat("quad"), Point(ref[0], ref[1]), Point(ref[2], ref[3]), Scalar(0,0,255), 2);
-	line(*imageDetails->getMat("quad"), Point(comp[0], comp[1]), Point(comp[2], comp[3]), Scalar(0,0,255), 2);
-
-	imshow("Quad", *imageDetails->getMat("quad"));
-
 	Point rcInter = findLineIntercepts(ref, comp);
 
 	cout << "rcInter: " << rcInter << endl << endl;
-
-	cvWaitKey();
-
-	displayVec->push_back(newLine1);
-	displayVec->push_back(newLine2);
-	displayVec->push_back(ref);
-	displayVec->push_back(comp);
 
 	vector<Point> quads;
 	quads.push_back(rcInter);
@@ -205,27 +198,8 @@ vector<Point> QuadFinder::completeQuad(Vec4i ref, String refVanPt, Vec4i comp, S
 	quads.push_back(inter);
 	quads.push_back(furPnts[1]);
 
-	/*cout << "P0: " << rcInter << " P1: " << furPnts[0] << endl;
-	line(*imageDetails->getMat("quad"), rcInter, furPnts[0], Scalar(0,255,0), 2);
-	imshow("Quad", *imageDetails->getMat("quad"));
-	cvWaitKey();
-
-	cout << " P1: " << furPnts[0] << " P2: " << inter << endl;
-	line(*imageDetails->getMat("quad"), furPnts[0], inter, Scalar(0,255,0), 2);
-	imshow("Quad", *imageDetails->getMat("quad"));
-	cvWaitKey();
-
-	cout << " P2: " << furPnts[1] << " P3: " << inter << endl;
-	line(*imageDetails->getMat("quad"), furPnts[1], inter, Scalar(0,255,0), 2);
-	imshow("Quad", *imageDetails->getMat("quad"));
-	cvWaitKey();
-
-	line(*imageDetails->getMat("quad"), rcInter, furPnts[1], Scalar(0,255,0), 2);
-	cout << "P3: " << rcInter << " P0: " << furPnts[1] << endl;
-	imshow("Quad", *imageDetails->getMat("quad"));
-	cvWaitKey();*/
-
-	imshow("Quad", *imageDetails->getMat("quad"));
+	displayQuad("Display Quad", quads, displayQuadMat);
+	//cvWaitKey();
 
 	return quads;
 }
