@@ -4,15 +4,29 @@ QuadFinder::QuadFinder(ImageDetails* img) {
 	imageDetails = img;
 	quadCand = new vector<vector<Point>*>;
 	displayVec = new vector<Vec4i>;
-
-	//leftQuads = new vector<vector<Point>>;
-	//rightQuads = new vector<vector<Point>>;
-	//vertQuads = new vector<vector<Point>>;
 }
 
+// QuadFinder::getQuads()
+// returns a vector of quadrilaterals for each vanishing point.
+// Points in each quadrilateral vector are arranged to be
+// displayed as follows:
+//        
+//        P(0) +-----------+ P(1)
+//             |           |
+//             |           |
+//             |           |
+//        P(3) +-----------+ P(2)
+//
+//        Line1 = Vec4i(P(0).x, P(0).y, P(1).x, P(1).y);
+//        Line1 = Vec4i(P(1).x, P(1).y, P(2).x, P(2).y);
+//        Line1 = Vec4i(P(2).x, P(2).y, P(3).x, P(3).y);
+//        Line1 = Vec4i(P(3).x, P(3).y, P(0).x, P(0).y);
+//
+//
 vector<vector<vector<Point>>>* QuadFinder::getQuads() {
 	findCloseLines();
 
+	// insert vectors into return vector.
 	vector<vector<vector<Point>>>* quads = new vector<vector<vector<Point>>>;
 	quads->push_back(leftQuads);
 	quads->push_back(rightQuads);
@@ -52,12 +66,6 @@ void QuadFinder::findCloseLines() {
 						i == 0 ? refString = leftVanLines : refString = rightVanLines;
 						j == 1 ? compString = rightVanLines : compString = vertLines;
 
-
-
-						//vector<vector<Point>> leftQuads;
-						//vector<vector<Point>> rightQuads;
-						//vector<vector<Point>> vertQuads;
-
 						if(refString == leftVanLines && compString == rightVanLines) {
 							vector<Point> vec = completeQuad(vanLines[i].at(ref), refString, vanLines[j].at(comp), compString);
 							vertQuads.push_back(vec);
@@ -66,8 +74,6 @@ void QuadFinder::findCloseLines() {
 						}  else {
 							leftQuads.push_back(completeQuad(vanLines[i].at(ref), refString, vanLines[j].at(comp), compString));
 						}
-						
-						//quadCand->push_back(&completeQuad(vanLines[i].at(ref), refString, vanLines[j].at(comp), compString));
 
 						vanLines[i].at(ref) = Vec4i(-1, -1, -1, -1);
 						vanLines[j].at(comp) = Vec4i(-1, -1, -1, -1);
