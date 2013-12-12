@@ -44,22 +44,29 @@ void LineFinder::greyImage() {
 	namedWindow(matName);
 	imshow(matName, greyed);
 	
-	cvWaitKey(0);
+	//cvWaitKey(0);
 }
 
 void LineFinder::blurImage() {
 	Mat blurred;
 	string matName = "blurred";
+	string blurType = "gaussianBlur";
 	int kernelSize = 5;
 	double sigma1 = 2.0;
 	double sigma2 = 2.0;
-	
-	GaussianBlur(*imageDetails->getMat("greyScale"), blurred, Size(kernelSize, kernelSize), sigma1, sigma2);
+
+	if(blurType == "bilateralFilter") {
+		bilateralFilter (*imageDetails->getMat("greyScale"), blurred, kernelSize, kernelSize*2, kernelSize/2 );
+	} else if(blurType == "gaussianBlur") {
+		GaussianBlur(*imageDetails->getMat("greyScale"), blurred, Size(kernelSize, kernelSize), sigma1, sigma2);
+	} else if(blurType == "medianBlur") {
+		medianBlur(*imageDetails->getMat("greyScale"), blurred, kernelSize);
+	}
 
 	imageDetails->insertMat("blurred", blurred);
 	imshow("blurred", blurred);
 	
-	cvWaitKey(0);
+	//cvWaitKey(0);
 }
 
 void LineFinder::detectEdges() {

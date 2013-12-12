@@ -21,7 +21,7 @@ Mat* ImageDetails::openOriginal(string imageLocation) {
     
     showImage(matName, image);
     
-    cvWaitKey(0);
+    //cvWaitKey(0);
 
 	return &image;
 }

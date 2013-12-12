@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
 
 	lineFinder.findValidLines(imageDetails.getLineList("houghpResult"), "leftVanLines", "rightVanLines", "vertLines");
 
-	cvWaitKey(0);
+	//cvWaitKey(0);
 
 	cout << "Found " << imageDetails.getLineList("leftVanLines")->size() + imageDetails.getLineList("rightVanLines")->size()
 		+ imageDetails.getLineList("vertLines")->size() << " lines." << endl;
@@ -56,17 +56,17 @@ int main(int argc, char *argv[]) {
 
 	namedWindow("ALLQUADS");
 	imshow("ALLQUADS", *imageDetails.getMat("original"));
+	imwrite("quads.jpg", *imageDetails.getMat("original"));
+	//LineGrouping lineGrouping(&lineFinder, &imageDetails);
+	//vector<vector<Vec4i>> retVec = lineGrouping.groupLines(*imageDetails.getMat("greyScale"));
 
-	LineGrouping lineGrouping(&lineFinder, &imageDetails);
-	vector<vector<Vec4i>> retVec = lineGrouping.groupLines(*imageDetails.getMat("greyScale"));
-
-	for(int i = 0; i < retVec.size(); i++) {
-		cout << "VEC SIZE: " << retVec[i].size() << endl;
-	}
+	//for(int i = 0; i < retVec.size(); i++) {
+	//	cout << "VEC SIZE: " << retVec[i].size() << endl;
+	//}
 
 	//QuadGrouper *quadGrouper = new QuadGrouper(&imageDetails);	
 	//QuadSorter *quadSorter = new QuadSOrter(&imageDetails);
-	cvWaitKey(0);
+	//cvWaitKey(0);
 
 	return 0;
 }

@@ -157,9 +157,9 @@ vector<Point> QuadFinder::completeQuad(Vec4i ref, String refVanPt, Vec4i comp, S
 	cout << "FurRef:   " << furPnts[0] << " :: FurComp: " << furPnts[1] << endl;
 
 	inter = findIntercepts(furPnts[0], getLineSlope(comp), furPnts[1], getLineSlope(ref));
-	cvWaitKey();
+	//cvWaitKey();
 	Point rcInter = findIntercepts(closePnts[0], getLineSlope(ref), closePnts[1], getLineSlope(comp));
-	cvWaitKey();
+	//cvWaitKey();
 
 	vector<Point> quads;
 	quads.push_back(rcInter);
@@ -173,10 +173,10 @@ vector<Point> QuadFinder::completeQuad(Vec4i ref, String refVanPt, Vec4i comp, S
 	line(displayQuadMat, Point(comp[0], comp[1]), Point(comp[2], comp[3]), Scalar(255,0,0), 1);
     circle(displayQuadMat, rcInter, 6, Scalar(0,100,0), 1);
 	imshow("Display Quad", displayQuadMat);
-	cvWaitKey();
+	//cvWaitKey();
 
 	displayQuad("Display Quad", quads, displayQuadMat);
-	cvWaitKey();
+	//cvWaitKey();
 
 	return quads;
 }
