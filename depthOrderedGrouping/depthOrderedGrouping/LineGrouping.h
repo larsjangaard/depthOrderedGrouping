@@ -27,7 +27,7 @@ private:
 	double calcParallelism(int , double , double );
 	double calcOrthogonality(int, double);
 	void displayLines(vector<vector<Vec4i>>& , Mat );
-	vector<vector<Vec4i>> reclusterLines(LineFinder*,vector<Vec4i>, vector<Vec4i>, vector<Vec4i>);
+	void reclusterLines(vector<Vec4i>, vector<Vec4i>, vector<Vec4i>);
 	vector<Vec4i> mergeLineVector (ImageDetails*);
 
 	ImageDetails* imageDetails;
