@@ -12,7 +12,7 @@ using namespace cv;
 int main(int argc, char *argv[]) {
 	ImageDetails imageDetails;
 
-	imageDetails.openOriginal("borders.jpg");
+	imageDetails.openOriginal("borders2.jpg");
 
 	Mat* img = imageDetails.getMat("original");
 
@@ -24,11 +24,9 @@ int main(int argc, char *argv[]) {
 	lineFinder.greyImage();
 	lineFinder.blurImage();
 	lineFinder.detectEdges();
-
 	cvWaitKey(0);
 
 	lineFinder.detectLines();
-
 	cvWaitKey(0);
 
 	lineFinder.findValidLines(imageDetails

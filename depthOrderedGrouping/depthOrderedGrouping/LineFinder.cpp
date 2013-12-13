@@ -20,6 +20,10 @@ string LineFinder::fileName;
 
 ImageDetails* LineFinder::imageDetails;
 
+// constructor - initialize all variable for sliders.
+// preconditions: none.
+// postconditions: variables are initialized.
+//
 LineFinder::LineFinder(ImageDetails* img) {
     imageDetails = img;
 
