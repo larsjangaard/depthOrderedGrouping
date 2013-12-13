@@ -80,9 +80,10 @@ bool QuadGrouper::tryCombine(vector<Point> quadA, vector<Point> quadB, vector<Po
 		}
 		float areaC = getIntxnArea(smallQuad, smallRect, quadC);
 		if (areaC/smallArea > .25) {
-			if (quadA[0].x == quadA[1].x ||
-				quadA[0].x == quadA[2].x ||
-				quadA[0].x == quadA[3].x)
+			if ((quadA[0].x == quadA[1].x &&
+			     quadA[2].x == quadA[3].x) ||
+			    (quadA[1].x == quadA[2].x &&
+			     quadA[3].x == quadA[0].x))
 			*combined = combineQuads(quadA, quadB);
 			else *combined = combineVertQuads(quadA, quadB);
 			return true;
