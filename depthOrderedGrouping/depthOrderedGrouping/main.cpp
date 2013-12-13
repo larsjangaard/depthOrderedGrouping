@@ -88,6 +88,6 @@ int main(int argc, char *argv[]) {
 			s.append("-");
 	}
 
-	imwrite("quads-" + s + ".jpg", *imageDetails.getMat("original"));
+	imwrite("output\\quads-" + s + ".jpg", *imageDetails.getMat("original"));
 	return 0;
 }
