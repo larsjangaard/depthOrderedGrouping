@@ -202,7 +202,7 @@ vector<Vec4i> LineGrouping::mergeLineVector (ImageDetails* imageDetails)
 
 
 
-vector<vector<Vec4i>> LineGrouping:: groupLines(Mat image)
+vector<vector<Vec4i>> LineGrouping::groupLines(Mat image)
 {
   
   //get the vector of lines
@@ -583,7 +583,7 @@ vector<vector<Vec4i>> LineGrouping:: groupLines(Mat image)
 	  	  
   }
     //using the opencv kmeans method, cluster the normalized vector, nLamba into "three" clusters
-    kmeans(nLambda, clusters, label, cvTermCriteria(1, 10, 1.0), 1, KMEANS_PP_CENTERS, center);
+    kmeans(nLambda, clusters, label, TermCriteria(CV_TERMCRIT_ITER, 10000, 0.0001), 1, KMEANS_PP_CENTERS, center);
 	
 	for(int i=0;i<clusters;i++) {
 		cout << "center "<<i<<": ";
@@ -598,8 +598,8 @@ vector<vector<Vec4i>> LineGrouping:: groupLines(Mat image)
 		  cout<< "the lambdaValue"<<nLambda.at<float>(i,0)<<"\n";
 
 		 //for each item in the output array where the index of the array corresponds to the line,
-		  //check iwhich cluster the line has been assigned.
-		  //based on its assigned cluster id, assign the line to that cluster
+		 //check iwhich cluster the line has been assigned.
+		 //based on its assigned cluster id, assign the line to that cluster
 	     if (label.at<int>(i,0) == 0 )
 	     {
 		   cluster1.push_back(lines[i]);
