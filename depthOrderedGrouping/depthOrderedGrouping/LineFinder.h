@@ -18,6 +18,7 @@
 #include <opencv/highgui.h>
 #include <set>
 #include "imageDetails.h"
+#include <fstream>
 
 using namespace cv;
 using namespace std;
@@ -67,6 +68,9 @@ class LineFinder {
 	// findValidLine parameters
 	static int verticalThresh;
 	static int validLineProx;
+
+	static fstream logFile;
+	static string fileName;
 };
 
 #endif /* defined(__depthOrderedGrouping__LineFinder__) */
