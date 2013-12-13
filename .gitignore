@@ -152,3 +152,9 @@ $RECYCLE.BIN/
 
 # Images
 *.jpg
+
+# VS10
+*.sln
+*.vcxproj
+*.filters
+*.txt
