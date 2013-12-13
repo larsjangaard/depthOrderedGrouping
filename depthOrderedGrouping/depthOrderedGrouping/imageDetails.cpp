@@ -28,7 +28,6 @@ Mat* ImageDetails::openOriginal(string imageLocation) {
     Mat image = imread(imageLocation);
     
     Mats[matName] = image;
-    showImage(matName, image);
 
 	return &image;
 }

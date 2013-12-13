@@ -26,24 +26,19 @@ int main(int argc, char *argv[]) {
 	lineFinder.detectEdges();
 
 	cvWaitKey(0);
+
 	lineFinder.detectLines();
 
 	cvWaitKey(0);
 
-	lineFinder.findValidLines(imageDetails.getLineList("houghpResult"), "leftVanLines", "rightVanLines", "vertLines");
-
-	//cvWaitKey(0);
-
-	cout << "Found " << imageDetails.getLineList("leftVanLines")->size() + imageDetails.getLineList("rightVanLines")->size()
-		+ imageDetails.getLineList("vertLines")->size() << " lines." << endl;
-
-	cout << "LeftVanLines: " << imageDetails.getLineList("leftVanLines")->size() << endl;
-	cout << "LeftVanLines: " << imageDetails.getLineList("rightVanLines")->size() << endl;
-	cout << "LeftVanLines: " << imageDetails.getLineList("vertLines")->size() << endl;
+	lineFinder.findValidLines(imageDetails
+		.getLineList("houghpResult"), "leftVanLines", "rightVanLines", "vertLines");
 
 	QuadFinder* quadFinder = new QuadFinder(&imageDetails);
 	vector<vector<vector<Point>>>* vec = quadFinder->getQuads();
+
 	Scalar scalar[] = { Scalar(255,0,0), Scalar(0,255,0), Scalar(0,0,255) };
+
 	Mat allQuads = imageDetails.getMat("original")->clone();
 	for(int i = 0; i < vec->size(); i++) {
 		for(int j = 0; j < vec->at(i).size(); j++) {
@@ -60,15 +55,7 @@ int main(int argc, char *argv[]) {
 	imshow("ALLQUADS", *imageDetails.getMat("allQuads"));
 	cvWaitKey(0);
 
-	//LineGrouping lineGrouping(&lineFinder, &imageDetails);
-	//vector<vector<Vec4i>> retVec = lineGrouping.groupLines(*imageDetails.getMat("greyScale"));
-
-	//for(int i = 0; i < retVec.size(); i++) {
-	//	cout << "VEC SIZE: " << retVec[i].size() << endl;
-	//}
-
 	QuadGrouper *quadGrouper = new QuadGrouper(&imageDetails, vec);
-	//QuadSorter *quadSorter = new QuadSOrter(&imageDetails);
 
 	int argAr[] = { lineFinder.cannyThresh1, lineFinder.cannyThresh2, lineFinder.cannyAperture, 
 		lineFinder.houghAccumulator, lineFinder.houghMinLen, lineFinder.houghMaxGap };

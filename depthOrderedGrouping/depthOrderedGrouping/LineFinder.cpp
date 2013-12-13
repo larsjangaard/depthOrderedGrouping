@@ -42,13 +42,7 @@ void LineFinder::greyImage() {
 	string matName = "greyScale";
 	
 	cvtColor(*imageDetails->getMat("original"), greyed, CV_BGR2GRAY);
-	
 	imageDetails->insertMat(matName, greyed);
-
-	namedWindow(matName);
-	imshow(matName, greyed);
-	
-	//cvWaitKey(0);
 }
 
 void LineFinder::blurImage() {
@@ -68,13 +62,10 @@ void LineFinder::blurImage() {
 	}
 
 	imageDetails->insertMat("blurred", blurred);
-	imshow("blurred", blurred);
 
 	logFile.open(fileName,ios_base::app);
 	logFile << "Line Detection - "  << "Accum: " << houghAccumulator << " Min Length: " << houghMinLen << " Max Gap: " << houghMaxGap << "\n";
 	logFile.close();
-	
-	//cvWaitKey(0);
 }
 
 void LineFinder::detectEdges() {
