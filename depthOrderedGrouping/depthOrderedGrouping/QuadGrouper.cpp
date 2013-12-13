@@ -1,10 +1,14 @@
 #include "QuadGrouper.h"
 
 
-QuadGrouper::QuadGrouper(ImageDetails *imageDetails, vector<vector<Point>*> *quads) {
+QuadGrouper::QuadGrouper(ImageDetails *imageDetails, vector<vector<vector<Point>>> *quads) {
 	imgDets = imageDetails;
-	ungroupedQuads = quads;
+	ungroupedQuads = *quads;
+	groupedLeftQuads = new vector<vector<Point>>;
+	groupedRightQuads = new vector<vector<Point>>;
+	groupedVertQuads = new vector<vector<Point>>;
 	groupQuads();
+	drawQuads();
 }
 
 
@@ -13,13 +17,13 @@ QuadGrouper::~QuadGrouper(void) {}
 void QuadGrouper::groupQuads() {
 
 	// temporary until available input
-	vector<vector<Point>> *ungroupedLeftQuads = new vector<vector<Point>>,
-						  *ungroupedRightQuads = new vector<vector<Point>>,
-						  *ungroupedVertQuads = new vector<vector<Point>>;
+	vector<vector<Point>> ungroupedLeftQuads = ungroupedQuads[0],
+						  ungroupedRightQuads = ungroupedQuads[1],
+						  ungroupedVertQuads = ungroupedQuads[2];
 
-	groupQuadVec(*ungroupedLeftQuads, groupedLeftQuads);
-	groupQuadVec(*ungroupedRightQuads, groupedRightQuads);
-	groupQuadVec(*ungroupedVertQuads, groupedVertQuads);
+	groupQuadVec(ungroupedLeftQuads, groupedLeftQuads);
+	groupQuadVec(ungroupedRightQuads, groupedRightQuads);
+	groupQuadVec(ungroupedVertQuads, groupedVertQuads);
 
 	//imgDets->insertQuadList("groupedLeftQuads", groupedLeftQuads);
 	//imgDets->insertQuadList("groupepRightQuads", groupedRightQuads);
@@ -37,13 +41,17 @@ void QuadGrouper::groupQuadVec(vector<vector<Point>> ungroupedQuads,
 		int size = ungroupedQuads.size();
 		vector<bool> foundGroup(size, false);
 		for (int i=0; i < size; i++) {
-			for (int j=i+1; j < size; j++) {
-				vector<Point> *groupedQuad = new vector<Point>;
-				if (tryCombine(ungroupedQuads[i],
-							   ungroupedQuads[j],
-							   *&groupedQuad)) {
-					groupedQuads->push_back(*groupedQuad);
-					foundGroup[i] = foundGroup[j] = foundAnyCombo = true;
+			if (!foundGroup[i]) {
+				for (int j=i+1; j < size; j++) {
+					if (!foundGroup[j]) {
+						vector<Point> *groupedQuad = new vector<Point>;
+						if (tryCombine(ungroupedQuads[i],
+									   ungroupedQuads[j],
+								       *&groupedQuad)) {
+							groupedQuads->push_back(*groupedQuad);
+							foundGroup[i] = foundGroup[j] = foundAnyCombo = true;
+						}
+					}
 				}
 			}
 		}
@@ -95,22 +103,22 @@ bool QuadGrouper::tryCombine(vector<Point> quadA, vector<Point> quadB, vector<Po
 // get the quad formed by two intersecting quads
 bool QuadGrouper::getQuadIntxn(vector<Point> quadA, vector<Point> quadB, vector<Point> &quadC) {
 
-	Polygons qA, qB, intxn;
+	Polygons qA(1), qB(1), intxn;
 	qA[0].push_back(IntPoint(quadA.at(0).x,quadA.at(0).y));
 	qA[0].push_back(IntPoint(quadA.at(1).x,quadA.at(1).y));
 	qA[0].push_back(IntPoint(quadA.at(2).x,quadA.at(2).y));
 	qA[0].push_back(IntPoint(quadA.at(3).x,quadA.at(3).y));
-	qB[1].push_back(IntPoint(quadB.at(0).x,quadB.at(0).y));
-	qB[1].push_back(IntPoint(quadB.at(1).x,quadB.at(1).y));
-	qB[1].push_back(IntPoint(quadB.at(2).x,quadB.at(2).y));
-	qB[1].push_back(IntPoint(quadB.at(3).x,quadB.at(3).y));
+	qB[0].push_back(IntPoint(quadB.at(0).x,quadB.at(0).y));
+	qB[0].push_back(IntPoint(quadB.at(1).x,quadB.at(1).y));
+	qB[0].push_back(IntPoint(quadB.at(2).x,quadB.at(2).y));
+	qB[0].push_back(IntPoint(quadB.at(3).x,quadB.at(3).y));
 
 	Clipper c;
 	c.AddPolygons(qA, ptSubject);
 	c.AddPolygons(qB, ptClip);
 	c.Execute(ctIntersection, intxn, pftNonZero, pftNonZero);
 
-	if (!intxn.empty()) {
+	if (!intxn.empty() && intxn[0].size() > 3) { //empty()) {
 		quadC.push_back(Point(intxn[0].at(0).X, intxn[0].at(0).Y));
 		quadC.push_back(Point(intxn[0].at(1).X, intxn[0].at(1).Y));
 		quadC.push_back(Point(intxn[0].at(2).X, intxn[0].at(2).Y));
@@ -143,9 +151,26 @@ float QuadGrouper::getArea(vector<Point> rect) {
 
 // get the area of the intersection between two rectified quads
 float QuadGrouper::getIntxnArea(vector<Point> quad, vector<Point> rect, vector<Point> intxnQuad) {
+	vector<Point2f> quad2f, rect2f, intxnQuad2f, intxnRect2f;
+	quad2f.push_back(Point2f(quad[0].x, quad[0].y));
+	quad2f.push_back(Point2f(quad[1].x, quad[1].y));
+	quad2f.push_back(Point2f(quad[2].x, quad[2].y));
+	quad2f.push_back(Point2f(quad[3].x, quad[3].y));
+	rect2f.push_back(Point2f(rect[0].x, rect[0].y));
+	rect2f.push_back(Point2f(rect[1].x, rect[1].y));
+	rect2f.push_back(Point2f(rect[2].x, rect[2].y));
+	rect2f.push_back(Point2f(rect[3].x, rect[3].y));
+	intxnQuad2f.push_back(Point2f(intxnQuad[0].x, intxnQuad[0].y));
+	intxnQuad2f.push_back(Point2f(intxnQuad[1].x, intxnQuad[1].y));
+	intxnQuad2f.push_back(Point2f(intxnQuad[2].x, intxnQuad[2].y));
+	intxnQuad2f.push_back(Point2f(intxnQuad[3].x, intxnQuad[3].y));
+	Mat homography = findHomography(quad2f, rect2f);
+	perspectiveTransform(intxnQuad2f, intxnRect2f, homography);
 	vector<Point> intxnRect;
-	Mat homography = findHomography(quad, rect);
-	perspectiveTransform(intxnQuad, intxnRect, homography);
+	intxnRect.push_back(Point(intxnRect2f[0].x, intxnRect2f[0].y));
+	intxnRect.push_back(Point(intxnRect2f[1].x, intxnRect2f[1].y));
+	intxnRect.push_back(Point(intxnRect2f[2].x, intxnRect2f[2].y));
+	intxnRect.push_back(Point(intxnRect2f[3].x, intxnRect2f[3].y));
 	return getArea(intxnRect);
 }
 
@@ -323,14 +348,15 @@ void QuadGrouper::drawQuads() {
 	Mat grouped = imgDets->getMat("original")->clone();
 	string matName = "grouped";
 
-	drawQuadsHelper(grouped, *groupedLeftQuads, Scalar_<double>(0,0,255));
+	drawQuadsHelper(grouped, *groupedLeftQuads, Scalar_<double>(255,0,0));
 	drawQuadsHelper(grouped, *groupedRightQuads, Scalar_<double>(0,255,0));
-	drawQuadsHelper(grouped, *groupedVertQuads, Scalar_<double>(255,0,0));
+	drawQuadsHelper(grouped, *groupedVertQuads, Scalar_<double>(0,0,255));
 
 	imgDets->insertMat(matName, grouped);
 	namedWindow(matName);
 	imshow(matName, grouped);
 	cvWaitKey(0);
+	imwrite("grouped.jpg", grouped);
 }
 
 // draws the lines
@@ -338,9 +364,9 @@ void QuadGrouper::drawQuadsHelper(Mat &grouped, vector<vector<Point>> quads, Sca
 
 	for (int i=0; i<quads.size(); i++) {
 		vector<Point> quad = quads[i];
-		line(grouped, quad[0], quad[1], color);
-		line(grouped, quad[1], quad[2], color);
-		line(grouped, quad[2], quad[3], color);
-		line(grouped, quad[3], quad[0], color);
+		line(grouped, quad[0], quad[1], color, 2);
+		line(grouped, quad[1], quad[2], color, 2);
+		line(grouped, quad[2], quad[3], color, 2);
+		line(grouped, quad[3], quad[0], color, 2);
 	}
 }

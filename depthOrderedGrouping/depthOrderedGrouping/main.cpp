@@ -4,7 +4,7 @@
 #include "imageDetails.h"
 #include "LineFinder.h"
 #include "QuadFinder.h"
-//#include "QuadGrouper.h"
+#include "QuadGrouper.h"
 #include "LineGrouping.h"
 
 using namespace cv;
@@ -44,18 +44,21 @@ int main(int argc, char *argv[]) {
 	QuadFinder* quadFinder = new QuadFinder(&imageDetails);
 	vector<vector<vector<Point>>>* vec = quadFinder->getQuads();
 	Scalar scalar[] = { Scalar(255,0,0), Scalar(0,255,0), Scalar(0,0,255) };
+	Mat allQuads = imageDetails.getMat("original")->clone();
 	for(int i = 0; i < vec->size(); i++) {
 		for(int j = 0; j < vec->at(i).size(); j++) {
 			vector<Point> pnts = vec->at(i).at(j);
-			line(*imageDetails.getMat("original"), pnts.at(0), pnts.at(1), scalar[i], 2);
-			line(*imageDetails.getMat("original"), pnts.at(1), pnts.at(2), scalar[i], 2);
-			line(*imageDetails.getMat("original"), pnts.at(2), pnts.at(3), scalar[i], 2);
-			line(*imageDetails.getMat("original"), pnts.at(0), pnts.at(3), scalar[i], 2);
+			line(allQuads, pnts.at(0), pnts.at(1), scalar[i], 2);
+			line(allQuads, pnts.at(1), pnts.at(2), scalar[i], 2);
+			line(allQuads, pnts.at(2), pnts.at(3), scalar[i], 2);
+			line(allQuads, pnts.at(0), pnts.at(3), scalar[i], 2);
+			imageDetails.insertMat("allQuads", allQuads);
 		}
 	}
 
 	namedWindow("ALLQUADS");
-	imshow("ALLQUADS", *imageDetails.getMat("original"));
+	imshow("ALLQUADS", *imageDetails.getMat("allQuads"));
+	cvWaitKey(0);
 
 	//LineGrouping lineGrouping(&lineFinder, &imageDetails);
 	//vector<vector<Vec4i>> retVec = lineGrouping.groupLines(*imageDetails.getMat("greyScale"));
@@ -64,9 +67,8 @@ int main(int argc, char *argv[]) {
 	//	cout << "VEC SIZE: " << retVec[i].size() << endl;
 	//}
 
-	//QuadGrouper *quadGrouper = new QuadGrouper(&imageDetails);	
+	QuadGrouper *quadGrouper = new QuadGrouper(&imageDetails, vec);
 	//QuadSorter *quadSorter = new QuadSOrter(&imageDetails);
-	//cvWaitKey(0);
 
 	int argAr[] = { lineFinder.cannyThresh1, lineFinder.cannyThresh2, lineFinder.cannyAperture, 
 		lineFinder.houghAccumulator, lineFinder.houghMinLen, lineFinder.houghMaxGap };
