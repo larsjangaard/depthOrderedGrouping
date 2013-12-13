@@ -121,7 +121,7 @@ bool QuadGrouper::getQuadIntxn(vector<Point> quadA, vector<Point> quadB, vector<
 }
 
 // rectify a quadrilateral
-vector<Point> rectify(vector<Point> quad) {
+vector<Point> QuadGrouper::rectify(vector<Point> quad) {
 	float longSideA = max(norm(quad.at(0) - quad.at(1)),
 						norm(quad.at(2) - quad.at(3)));
 	float longSideB = max(norm(quad.at(1) - quad.at(2)),
@@ -216,7 +216,7 @@ vector<Point> QuadGrouper::combineQuads(vector<Point> quadA, vector<Point> quadB
 }
 
 // combine quads that don't have vertical lines
-vector<Point> QuadGrouper::combineQuads(vector<Point> quadA, vector<Point> quadB) {
+vector<Point> QuadGrouper::combineVertQuads(vector<Point> quadA, vector<Point> quadB) {
 	Point leftFinal, rightFinal, topFinal, bottomFinal;
 	
 	// initial quad points
