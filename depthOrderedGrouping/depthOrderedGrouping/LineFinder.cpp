@@ -15,6 +15,8 @@ int LineFinder::cannyAperture;
 int LineFinder::houghAccumulator, LineFinder::houghMinLen, LineFinder::houghMaxGap;
 int LineFinder::validLineProx;
 int LineFinder::verticalThresh;
+fstream LineFinder::logFile;
+string LineFinder::fileName;
 
 ImageDetails* LineFinder::imageDetails;
 
@@ -31,6 +33,8 @@ LineFinder::LineFinder(ImageDetails* img) {
 
 	verticalThresh = 4;
 	validLineProx = 80;
+
+	fileName = "logfile.txt";
 }
 
 void LineFinder::greyImage() {
@@ -44,22 +48,33 @@ void LineFinder::greyImage() {
 	namedWindow(matName);
 	imshow(matName, greyed);
 	
-	cvWaitKey(0);
+	//cvWaitKey(0);
 }
 
 void LineFinder::blurImage() {
 	Mat blurred;
 	string matName = "blurred";
-	int kernelSize = 5;
+	string blurType = "gaussianBlur";
+	int kernelSize = 15;
 	double sigma1 = 2.0;
 	double sigma2 = 2.0;
-	
-	GaussianBlur(*imageDetails->getMat("greyScale"), blurred, Size(kernelSize, kernelSize), sigma1, sigma2);
+
+	if(blurType == "bilateralFilter") {
+		bilateralFilter (*imageDetails->getMat("greyScale"), blurred, kernelSize, kernelSize*2, kernelSize/2 );
+	} else if(blurType == "gaussianBlur") {
+		GaussianBlur(*imageDetails->getMat("greyScale"), blurred, Size(kernelSize, kernelSize), sigma1, sigma2);
+	} else if(blurType == "medianBlur") {
+		medianBlur(*imageDetails->getMat("greyScale"), blurred, kernelSize);
+	}
 
 	imageDetails->insertMat("blurred", blurred);
 	imshow("blurred", blurred);
+
+	logFile.open(fileName,ios_base::app);
+	logFile << "Line Detection - "  << "Accum: " << houghAccumulator << " Min Length: " << houghMinLen << " Max Gap: " << houghMaxGap << "\n";
+	logFile.close();
 	
-	cvWaitKey(0);
+	//cvWaitKey(0);
 }
 
 void LineFinder::detectEdges() {
@@ -74,6 +89,10 @@ void LineFinder::detectEdges() {
 
     imageDetails->insertMat("edged", edged);
     imshow("Output1", edged);	
+
+	logFile.open(fileName,ios_base::app);
+	logFile << "Edge Detection - "  << "Thresh1: " << cannyThresh1 << " Thresh2: " << cannyThresh2 << "\n";
+	logFile.close();
 }
 
 void LineFinder::detectLines() {
@@ -95,6 +114,10 @@ void LineFinder::detectLines() {
     createTrackbar("Max Gap", "Output2", &houghMaxGap, 100, houghMaxGapTrackbar);
 
 	imshow("Output2", *imageDetails->getMat("houghed"));
+
+	logFile.open(fileName,ios_base::app);
+	logFile << "Line Detection - "  << "Accum: " << houghAccumulator << " Min Length: " << houghMinLen << " Max Gap: " << houghMaxGap << "\n";
+	logFile.close();
 }
 
 void LineFinder::findValidLines() {
@@ -159,11 +182,14 @@ void LineFinder::findValidLines(vector<Vec4i> *lineList, string left, string rig
 	goodLines->push_back(imageDetails->getLineList(right));
 	goodLines->push_back(imageDetails->getLineList(vert));
 
+	int numLines = 0;
+
     // draw all the 'goodLines'
     for( int i=0; i < goodLines->size(); i++ ) {
         vector<Vec4i> *curLines = (*goodLines)[i];
         
 		for( int j=0; j < curLines->size(); j++) {
+			numLines++;
             Vec4i l = (*curLines)[j];
             line(*imageDetails->getMat("vanished"), Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255));
         }
@@ -175,6 +201,10 @@ void LineFinder::findValidLines(vector<Vec4i> *lineList, string left, string rig
     // Trackbar for vanishing points filter (goes slow)
     createTrackbar("Prox", "Output3", &validLineProx, 300, goodLineProxTrackbar);		
 	imshow("Output3", *imageDetails->getMat("vanished"));
+
+	logFile.open(fileName,ios_base::app);
+	logFile << "Lines Found - " << numLines << "\n";
+	logFile.close();
 }
 
 void LineFinder::insertLists(string tempLists[]) {

@@ -18,6 +18,7 @@
 #include <opencv/highgui.h>
 #include <set>
 #include "imageDetails.h"
+#include <fstream>
 
 using namespace cv;
 using namespace std;
@@ -34,6 +35,18 @@ class LineFinder {
 
 	static void findValidLines();
 	static void findValidLines(vector<Vec4i>*, string, string, string);
+
+    // Canny parameters
+    static int cannyThresh1;
+	static int cannyThresh2;
+	static int cannyAperture;
+
+    // HoughlinesP parameters
+    static int houghAccumulator, houghMinLen, houghMaxGap;
+
+	// findValidLine parameters
+	static int verticalThresh;
+	static int validLineProx;
 	
   private:
 
@@ -57,7 +70,7 @@ class LineFinder {
 	static void insertFinalLists(string[]);
 	
     // Canny parameters
-    static int cannyThresh1;
+    /*static int cannyThresh1;
 	static int cannyThresh2;
 	static int cannyAperture;
 
@@ -66,7 +79,10 @@ class LineFinder {
 
 	// findValidLine parameters
 	static int verticalThresh;
-	static int validLineProx;
+	static int validLineProx;*/
+
+	static fstream logFile;
+	static string fileName;
 };
 
 #endif /* defined(__depthOrderedGrouping__LineFinder__) */
