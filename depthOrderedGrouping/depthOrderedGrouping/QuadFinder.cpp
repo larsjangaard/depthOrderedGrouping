@@ -1,5 +1,20 @@
+//
+//  QuadFinder.cpp
+//  
+//  Implementation of the QuadFinder class. Uses an ImageDetails
+//  object to find Quadrilaterals from grouped lines. Uses
+//  leftVanLines, rightVanLines, and vertLines provided by
+//  the LineFinder class.
+//
+//  Lars Jangaard
+
 #include "QuadFinder.h"
 
+// constructor: stores the point to imageDetails
+// and creates new mats from the original image.
+// preconditions: imageDetails with leftVanLines, rightVanLines,
+//                and vertLines lists must exist.
+// postconditions: class variables are instantiated.
 QuadFinder::QuadFinder(ImageDetails* img) {
 	imageDetails = img;
 	quadCand = new vector<vector<Point>*>;
@@ -73,16 +88,12 @@ void QuadFinder::findCloseLines() {
 						j == 1 ? compString = rightVanLines : compString = vertLines;
 
 						if(refString == leftVanLines && compString == rightVanLines) {
-							vector<Point> vec = completeQuad(vanLines[i].at(ref), refString, vanLines[j].at(comp), compString);
-							vertQuads.push_back(vec);
+							vertQuads.push_back(completeQuad(vanLines[i].at(ref), refString, vanLines[j].at(comp), compString));
 						} else if(refString == leftVanLines && compString == vertLines) {
 							rightQuads.push_back(completeQuad(vanLines[i].at(ref), refString, vanLines[j].at(comp), compString));
 						}  else {
 							leftQuads.push_back(completeQuad(vanLines[i].at(ref), refString, vanLines[j].at(comp), compString));
 						}
-
-						//vanLines[i].at(ref) = Vec4i(-1, -1, -1, -1);
-						//vanLines[j].at(comp) = Vec4i(-1, -1, -1, -1);
 
 						ref++;
 					}
@@ -94,6 +105,12 @@ void QuadFinder::findCloseLines() {
 	cout << "LinesCompared: " << totalCount << endl;
 }
 
+// closeEnough - determines the distance between two lines from different orientations. If
+//               the distance is within threshold, true is returned.
+// preconditions: none.
+// postconditions: true is returned if the lines are close enough. false is returned if the
+//                 lines are equal or too far apart.
+//
 bool QuadFinder::closeEnough(Vec4i ref, Vec4i comp) {
 	if(ref == comp || comp == Vec4i(-1, -1, -1, -1) || ref == Vec4i(-1, -1, -1, -1)) return false;
 
@@ -159,9 +176,7 @@ vector<Point> QuadFinder::completeQuad(Vec4i ref, String refVanPt, Vec4i comp, S
 	cout << "FurRef:   " << furPnts[0] << " :: FurComp: " << furPnts[1] << endl;
 
 	inter = findIntercepts(furPnts[0], getLineSlope(comp), furPnts[1], getLineSlope(ref));
-	//cvWaitKey();
 	Point rcInter = findIntercepts(closePnts[0], getLineSlope(ref), closePnts[1], getLineSlope(comp));
-	//cvWaitKey();
 
 	vector<Point> quads;
 	quads.push_back(rcInter);
@@ -175,10 +190,8 @@ vector<Point> QuadFinder::completeQuad(Vec4i ref, String refVanPt, Vec4i comp, S
 	line(displayQuadMat, Point(comp[0], comp[1]), Point(comp[2], comp[3]), Scalar(255,0,0), 1);
     circle(displayQuadMat, rcInter, 6, Scalar(0,100,0), 1);
 	imshow("Display Quad", displayQuadMat);
-	//cvWaitKey();
 
 	displayQuad("Display Quad", quads, displayQuadMat);
-	//cvWaitKey();
 
 	return quads;
 }
@@ -194,25 +207,10 @@ Vec4i QuadFinder::createNewLine(Point p1, Point p2) {
 	return retLine;
 }
 
-Vec4i QuadFinder::extendLine(Vec4i ref, Vec4i comp) {
-	int compDistance = sqrt(pow(abs(comp[0] - comp[2]),2.0) + pow(abs(comp[1] - comp[3]), 2.0));
-
-	double refSlope = (double)(ref[1] - ref[3]) / (double)(ref[0] - ref[2]);
-	double refB = (double)ref[1] - (double)(refSlope * ref[0]);
-
-	int x = ref[2] + compDistance + 5;
-	int y = refSlope * x + refB;
-
-	ref[2] = x;
-	ref[3] = y;
-
-	return ref;
-}
-
-// QuadFinder::furthestPnt()
+// furthestPnt - finds and returns the furthest end points between two lines.
 //
-// Preconditions:
-// Postconditions:
+// Preconditions: none.
+// Postconditions: finds the furthest end points between two lines
 //
 vector<Point> QuadFinder::furthestPnt(Vec4i ref, Vec4i comp) {
 	vector<Point> closest = findClosestPnt(ref, comp);
@@ -228,6 +226,11 @@ vector<Point> QuadFinder::furthestPnt(Vec4i ref, Vec4i comp) {
 	return furs;
 }
 
+// findClosestPnt - finds and returns the closest end points between two lines.
+//
+// Preconditions: none.
+// Postconditions: finds the closest end points between two lines
+//
 vector<Point> QuadFinder::findClosestPnt(Vec4i ref, Vec4i comp) {
 	double refS = getLineSlope(ref);
 	double refB = getLineIntercept(ref, refS);
@@ -253,8 +256,6 @@ vector<Point> QuadFinder::findClosestPnt(Vec4i ref, Vec4i comp) {
 		for(int j = 0; j < l2.size(); j++) {
 			double dist = lineDist(Vec4i(l1.at(i).x, l1.at(i).y, l2.at(j).x, l2.at(j).y));
 
-			//cout << "comparing: " << l1.at(i) << " : " << l2.at(j) << " - dist: " << dist << endl;
-			//cvWaitKey();
 			if(dist < minDist) {
 				minDist = dist;
 
@@ -305,6 +306,9 @@ double QuadFinder::lineDist(Vec4i ref) {
 	return distance;
 }
 
+// findIntercepts
+// preconditions: none.
+// postconditions: the intersection of two lines, a Point, is returned.
 Point QuadFinder::findIntercepts(Point pnt1, double slope1, Point pnt2, double slope2) {
 	Point retPnt;
 	double b1 = pnt1.y - (slope1 * pnt1.x);

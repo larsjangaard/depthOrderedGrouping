@@ -27,7 +27,6 @@ class QuadFinder
 		vector<Point> completeQuad(Vec4i, String, Vec4i, String);
 
 		Vec4i createNewLine(Point, Point);
-		Vec4i extendLine(Vec4i, Vec4i);
 		vector<Point> furthestPnt(Vec4i, Vec4i);
 
 		double getLineSlope(Vec4i);
