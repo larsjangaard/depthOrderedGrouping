@@ -43,20 +43,20 @@ int main(int argc, char *argv[]) {
 
 	QuadFinder* quadFinder = new QuadFinder(&imageDetails);
 	vector<vector<vector<Point>>>* vec = quadFinder->getQuads();
-
+	Scalar scalar[] = { Scalar(255,0,0), Scalar(0,255,0), Scalar(0,0,255) };
 	for(int i = 0; i < vec->size(); i++) {
 		for(int j = 0; j < vec->at(i).size(); j++) {
 			vector<Point> pnts = vec->at(i).at(j);
-			line(*imageDetails.getMat("original"), pnts.at(0), pnts.at(1), Scalar(0,255,0), 2);
-			line(*imageDetails.getMat("original"), pnts.at(1), pnts.at(2), Scalar(0,255,0), 2);
-			line(*imageDetails.getMat("original"), pnts.at(2), pnts.at(3), Scalar(0,255,0), 2);
-			line(*imageDetails.getMat("original"), pnts.at(0), pnts.at(3), Scalar(0,255,0), 2);
+			line(*imageDetails.getMat("original"), pnts.at(0), pnts.at(1), scalar[i], 2);
+			line(*imageDetails.getMat("original"), pnts.at(1), pnts.at(2), scalar[i], 2);
+			line(*imageDetails.getMat("original"), pnts.at(2), pnts.at(3), scalar[i], 2);
+			line(*imageDetails.getMat("original"), pnts.at(0), pnts.at(3), scalar[i], 2);
 		}
 	}
 
 	namedWindow("ALLQUADS");
 	imshow("ALLQUADS", *imageDetails.getMat("original"));
-	imwrite("quads.jpg", *imageDetails.getMat("original"));
+
 	//LineGrouping lineGrouping(&lineFinder, &imageDetails);
 	//vector<vector<Vec4i>> retVec = lineGrouping.groupLines(*imageDetails.getMat("greyScale"));
 
@@ -68,5 +68,24 @@ int main(int argc, char *argv[]) {
 	//QuadSorter *quadSorter = new QuadSOrter(&imageDetails);
 	//cvWaitKey(0);
 
+	int argAr[] = { lineFinder.cannyThresh1, lineFinder.cannyThresh2, lineFinder.cannyAperture, 
+		lineFinder.houghAccumulator, lineFinder.houghMinLen, lineFinder.houghMaxGap };
+
+	string s;
+
+	for(int i = 0; i < 6; i++) {
+		string temp;
+		stringstream ss;
+		ss << argAr[i];
+		ss >> temp;
+
+
+		s = s.append(temp);
+
+		if(i != 5)
+			s.append("-");
+	}
+
+	imwrite("quads-" + s + ".jpg", *imageDetails.getMat("original"));
 	return 0;
 }

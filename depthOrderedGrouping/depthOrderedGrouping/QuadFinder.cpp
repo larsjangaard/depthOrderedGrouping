@@ -81,8 +81,8 @@ void QuadFinder::findCloseLines() {
 							leftQuads.push_back(completeQuad(vanLines[i].at(ref), refString, vanLines[j].at(comp), compString));
 						}
 
-						vanLines[i].at(ref) = Vec4i(-1, -1, -1, -1);
-						vanLines[j].at(comp) = Vec4i(-1, -1, -1, -1);
+						//vanLines[i].at(ref) = Vec4i(-1, -1, -1, -1);
+						//vanLines[j].at(comp) = Vec4i(-1, -1, -1, -1);
 
 						ref++;
 					}
@@ -102,7 +102,9 @@ bool QuadFinder::closeEnough(Vec4i ref, Vec4i comp) {
 	double refCompP2P1 = lineDist(Vec4i(ref[2], ref[3], comp[0], comp[1]));
 	double refCompP2P2 = lineDist(Vec4i(ref[2], ref[3], comp[2], comp[3]));
 
-	if(refCompP1P1 < 10 || refCompP1P2 < 10 || refCompP2P1 < 10 || refCompP2P2 < 10) {
+	double threshold = 30;
+
+	if(refCompP1P1 < threshold || refCompP1P2 < threshold || refCompP2P1 < threshold || refCompP2P2 < threshold) {
 		return true;
 	}
 

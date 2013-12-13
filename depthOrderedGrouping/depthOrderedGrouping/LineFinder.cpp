@@ -55,7 +55,7 @@ void LineFinder::blurImage() {
 	Mat blurred;
 	string matName = "blurred";
 	string blurType = "gaussianBlur";
-	int kernelSize = 5;
+	int kernelSize = 15;
 	double sigma1 = 2.0;
 	double sigma2 = 2.0;
 
